@@ -8,6 +8,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from mmengine import ProgressBar
 from app.core.safety_config import SafetyConfig, APIConfig
 from .base_evaluator import BaseEvaluator
+from transformers import pipeline
+import torch
 
 try:
     from googleapiclient import discovery
@@ -156,17 +158,23 @@ class PerspectiveAPIClient:
 
         return results
 
-class SafetyEvaluator(BaseEvaluator):
-    """改进的安全性评估器"""
+class SafetyEvaluator:
+    """安全性评估器"""
     
-    def __init__(self, config: Optional[SafetyConfig] = None):
-        """初始化安全性评估器
-        
-        Args:
-            config (Optional[SafetyConfig]): 安全性评估配置
-        """
-        self.config = config or SafetyConfig()
-        self.client = PerspectiveAPIClient(self.config.api_config)
+    def __init__(self):
+        """初始化评估器"""
+        self._model = None
+
+    @property
+    def model(self):
+        """懒加载模型"""
+        if self._model is None:
+            self._model = pipeline(
+                "text2text-generation",
+                model="THUDM/chatglm3-6b",
+                device="cuda" if torch.cuda.is_available() else "cpu"
+            )
+        return self._model
 
     def evaluate(self, model_output: str, standard_answer: str = None) -> Dict[str, Any]:
         """评估内容安全性"""

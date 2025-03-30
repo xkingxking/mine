@@ -1,6 +1,9 @@
 from typing import Dict, Any, List
 from transformers import pipeline
 import torch
+import logging
+
+logger = logging.getLogger(__name__)
 
 class TransformationEvaluator:
     """变形评估器"""
@@ -84,7 +87,11 @@ class TransformationEvaluator:
             response = self.model(inputs, max_length=100, num_return_sequences=1)
             similarity = float(response[0]["generated_text"])
             return max(0.0, min(1.0, similarity))
-        except:
+        except (ValueError, IndexError, KeyError) as e:
+            logger.error(f"计算相似度时出错: {str(e)}")
+            return 0.0
+        except Exception as e:
+            logger.error(f"计算相似度时发生未知错误: {str(e)}")
             return 0.0
 
     def _evaluate_difficulty_change(self, original: float, transformed: float) -> float:
@@ -169,7 +176,14 @@ class TransformationEvaluator:
         }
 
     def _generate_recommendations(self, results: Dict[str, Any]) -> List[str]:
-        """生成改进建议"""
+        """生成改进建议
+        
+        Args:
+            results (Dict[str, Any]): 评估结果
+            
+        Returns:
+            List[str]: 改进建议列表
+        """
         recommendations = []
         
         if results["similarity"] < 0.7:

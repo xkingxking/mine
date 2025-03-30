@@ -1,120 +1,101 @@
-from fastapi import APIRouter, HTTPException, Depends
-from typing import List, Dict, Any
+from fastapi import APIRouter, HTTPException
+from typing import Dict, Any, List
 from app.modules.question_generator.generator import QuestionGenerator
 from app.modules.evaluator.safety_evaluator import SafetyEvaluator
 from app.modules.transformer.transformer import QuestionTransformer
 from app.modules.transformer.evaluator import TransformationEvaluator
 from app.modules.report_generator.report import ReportGenerator
+from app.middleware.error_handler import setup_error_handling
+from app.schemas.response import ResponseModel
+from app.schemas.question import QuestionCreate, QuestionUpdate, QuestionTransform
 
-api_router = APIRouter()
+router = APIRouter()
 
-# 初始化各个模块
+# 初始化组件
 question_generator = QuestionGenerator()
 safety_evaluator = SafetyEvaluator()
 question_transformer = QuestionTransformer()
 transformation_evaluator = TransformationEvaluator()
 report_generator = ReportGenerator()
 
-@api_router.post("/questions/generate")
-async def generate_questions(count: int = 500) -> Dict[str, Any]:
-    """生成测试题库"""
-    try:
-        questions = question_generator.generate_questions(count)
-        return {
-            "status": "success",
-            "data": questions
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+# 设置错误处理
+setup_error_handling(router)
 
-@api_router.post("/questions/transform")
-async def transform_question(
-    question: Dict[str, Any],
-    transform_type: str
-) -> Dict[str, Any]:
-    """变形题目
-    
-    Args:
-        question (Dict[str, Any]): 原始题目
-        transform_type (str): 变形类型
-        
-    Returns:
-        Dict[str, Any]: 变形后的题目
-    """
-    try:
-        transformed_question = question_transformer.transform(question, transform_type)
-        return transformed_question
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+@router.post("/questions/generate", response_model=ResponseModel)
+async def generate_questions(count: int = 500):
+    """生成题目"""
+    questions = await question_generator.generate_questions(count)
+    return ResponseModel(
+        status="success",
+        data=questions,
+        message=f"成功生成{count}道题目"
+    )
 
-@api_router.post("/questions/transform/evaluate")
+@router.post("/questions/transform", response_model=ResponseModel)
+async def transform_question(transform_data: QuestionTransform):
+    """变形题目"""
+    transformed = await question_transformer.transform(
+        transform_data.question.dict(),
+        transform_data.transform_type
+    )
+    return ResponseModel(
+        status="success",
+        data=transformed,
+        message="题目变形成功"
+    )
+
+@router.post("/questions/transform/evaluate", response_model=ResponseModel)
 async def evaluate_transformation(
-    original_question: Dict[str, Any],
-    transformed_question: Dict[str, Any]
-) -> Dict[str, Any]:
-    """评估题目变形质量
-    
-    Args:
-        original_question (Dict[str, Any]): 原始题目
-        transformed_question (Dict[str, Any]): 变形后的题目
-        
-    Returns:
-        Dict[str, Any]: 评估报告
-    """
-    try:
-        evaluation_results = transformation_evaluator.evaluate(
-            original_question,
-            transformed_question
-        )
-        report = transformation_evaluator.generate_report(evaluation_results)
-        return report
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    original_question: QuestionCreate,
+    transformed_question: QuestionCreate
+):
+    """评估题目变形质量"""
+    results = await transformation_evaluator.evaluate(
+        original_question.dict(),
+        transformed_question.dict()
+    )
+    return ResponseModel(
+        status="success",
+        data=results,
+        message="变形评估完成"
+    )
 
-@api_router.post("/evaluate")
-async def evaluate_model_response(
-    model_input: str,
-    model_output: str,
-    evaluation_types: List[str] = None
-) -> Dict[str, Any]:
+@router.post("/evaluate", response_model=ResponseModel)
+async def evaluate_model(model_output: Dict[str, Any]):
     """评估模型输出"""
-    try:
-        results = safety_evaluator.evaluate(model_output)
-        return {
-            "status": "success",
-            "data": results
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    results = await safety_evaluator.evaluate(model_output)
+    return ResponseModel(
+        status="success",
+        data=results,
+        message="模型评估完成"
+    )
 
-@api_router.post("/report/generate")
-async def generate_report(
-    test_results: Dict[str, Any],
-    report_type: str = "comprehensive"
-) -> Dict[str, Any]:
-    """生成测试报告"""
-    try:
-        report = report_generator.generate_report(
-            test_results, report_type
-        )
-        return {
-            "status": "success",
-            "data": report
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+@router.post("/reports/generate", response_model=ResponseModel)
+async def generate_report(evaluation_results: Dict[str, Any]):
+    """生成评估报告"""
+    report = await report_generator.generate_report(evaluation_results)
+    return ResponseModel(
+        status="success",
+        data=report,
+        message="报告生成成功"
+    )
 
-@api_router.post("/report/export")
-async def export_report(
-    report: Dict[str, Any],
-    format: str = "pdf"
-) -> Dict[str, Any]:
-    """导出报告"""
-    try:
-        file_path = report_generator.export_report(report, format)
-        return {
-            "status": "success",
-            "data": {"file_path": file_path}
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) 
+@router.get("/reports/{report_id}", response_model=ResponseModel)
+async def get_report(report_id: str):
+    """获取评估报告"""
+    report = await report_generator.get_report(report_id)
+    return ResponseModel(
+        status="success",
+        data=report,
+        message="获取报告成功"
+    )
+
+@router.get("/reports/{report_id}/export", response_model=ResponseModel)
+async def export_report(report_id: str, format: str = "pdf"):
+    """导出评估报告"""
+    file_path = await report_generator.export_report(report_id, format)
+    return ResponseModel(
+        status="success",
+        data={"file_path": file_path},
+        message="报告导出成功"
+    ) 

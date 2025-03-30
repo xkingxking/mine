@@ -1,36 +1,43 @@
-from pydantic import BaseSettings
+from pydantic import BaseModel
 from typing import List, Optional
+from datetime import datetime
 
-class Settings(BaseSettings):
-    PROJECT_NAME: str = "大模型性能与安全观测平台"
-    VERSION: str = "1.0.0"
-    DESCRIPTION: str = "用于观测和评估大语言模型性能与安全性的综合平台"
+class Settings(BaseModel):
+    """应用配置"""
+    # 项目配置
+    PROJECT_NAME: str
+    VERSION: str
+    DESCRIPTION: str
     
     # API配置
-    API_V1_STR: str = "/api/v1"
+    API_V1_STR: str
     
     # 安全配置
-    SECRET_KEY: str = "your-secret-key-here"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8  # 8 days
+    SECRET_KEY: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int
     
     # 数据库配置
-    DATABASE_URL: str = "postgresql://user:password@localhost/dbname"
+    DATABASE_URL: str
     
     # 模型配置
-    SUPPORTED_MODELS: List[str] = [
-        "gpt-3.5-turbo",
-        "gpt-4",
-        "claude-2",
-        "llama-2",
-        "chatglm3"
-    ]
+    SUPPORTED_MODELS: List[str]
     
     # 题库配置
-    MIN_QUESTIONS: int = 500
-    VALIDATION_THRESHOLD: float = 0.9
+    MIN_QUESTIONS: int
+    VALIDATION_THRESHOLD: float
+    
+    # Redis配置
+    REDIS_URL: Optional[str]
+    
+    # API密钥
+    PERSPECTIVE_API_KEY: Optional[str]
+    
+    # 日志配置
+    LOG_LEVEL: str
+    LOG_FILE: str
     
     class Config:
-        case_sensitive = True
         env_file = ".env"
+        case_sensitive = True
 
 settings = Settings() 

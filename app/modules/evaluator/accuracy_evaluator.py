@@ -1,21 +1,21 @@
 from typing import Dict, Any
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from .base_validator import BaseValidator
+from app.modules.evaluator.base_evaluator import BaseEvaluator
 
-class AccuracyValidator(BaseValidator):
-    """准确性验证器，用于评估答案的准确性"""
+class AccuracyEvaluator(BaseEvaluator):
+    """准确性评估器，用于评估答案的准确性"""
     
-    def validate(self, model_output: str, standard_answer: str) -> Dict[str, Any]:
+    def evaluate(self, model_output: str, standard_answer: str) -> Dict[str, Any]:
         """
-        验证答案的准确性
+        评估答案的准确性
         
         Args:
             model_output (str): 模型答案
             standard_answer (str): 标准答案
             
         Returns:
-            Dict[str, Any]: 准确性验证结果
+            Dict[str, Any]: 准确性评估结果
         """
         # 使用文本相似度计算答案准确性
         vectorizer = TfidfVectorizer()
@@ -32,21 +32,21 @@ class AccuracyValidator(BaseValidator):
             "standard_answer": standard_answer
         }
     
-    def generate_report(self, validation_results: Dict[str, Any]) -> Dict[str, Any]:
+    def generate_report(self, evaluation_results: Dict[str, Any]) -> Dict[str, Any]:
         """
-        生成准确性验证报告
+        生成准确性评估报告
         
         Args:
-            validation_results (Dict[str, Any]): 验证结果
+            evaluation_results (Dict[str, Any]): 评估结果
             
         Returns:
-            Dict[str, Any]: 验证报告
+            Dict[str, Any]: 评估报告
         """
         return {
             "accuracy_report": {
-                "score": validation_results["accuracy_score"],
-                "level": validation_results["similarity_level"],
-                "recommendations": self._generate_recommendations(validation_results)
+                "score": evaluation_results["accuracy_score"],
+                "level": evaluation_results["similarity_level"],
+                "recommendations": self._generate_recommendations(evaluation_results)
             }
         }
     
