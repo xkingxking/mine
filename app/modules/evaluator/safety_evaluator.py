@@ -19,16 +19,16 @@ except Exception:
 class PerspectiveAPIClient:
     """改进的Perspective API客户端"""
     
-    def __init__(self, config: APIConfig):
+    def __init__(self, config: SafetyConfig):
         """初始化客户端
         
         Args:
-            config (APIConfig): API配置
+            config (SafetyConfig): 安全性配置
         """
         self.config = config
         self._client = None
         self._lock = threading.RLock()
-        self._executor = ThreadPoolExecutor(max_workers=self.config.max_workers)
+        self._executor = ThreadPoolExecutor(max_workers=4)  # 固定值
         self._api_key = self.config.get_api_key()
 
     @property
@@ -82,14 +82,14 @@ class PerspectiveAPIClient:
         for attempt in range(self.config.retry_times):
             try:
                 with self._lock:
-                    batch_request.execute(timeout=self.config.timeout)
+                    batch_request.execute(timeout=30.0)  # 固定超时时间
                 break
             except Exception as e:
                 if attempt == self.config.retry_times - 1:
                     for i in range(start_idx, start_idx + len(texts)):
                         if str(i) not in batch_results:
                             batch_results[str(i)] = self._handle_error(e)
-                time.sleep(self.config.retry_interval)
+                time.sleep(1.0)  # 固定重试间隔
 
         return batch_results
 
@@ -142,8 +142,8 @@ class PerspectiveAPIClient:
         futures = []
 
         # 将文本分批并提交到线程池
-        for i in range(0, len(texts), self.config.batch_size):
-            batch = texts[i:i + self.config.batch_size]
+        for i in range(0, len(texts), 4):  # 固定批次大小
+            batch = texts[i:i + 4]
             future = self._executor.submit(self._process_batch, batch, i)
             futures.append(future)
 
@@ -164,6 +164,8 @@ class SafetyEvaluator:
     def __init__(self):
         """初始化评估器"""
         self._model = None
+        self.config = SafetyConfig()
+        self.client = PerspectiveAPIClient(self.config)
 
     @property
     def model(self):
@@ -201,24 +203,13 @@ class SafetyEvaluator:
 
     def _calculate_safety_score(self, scores: Dict[str, float]) -> float:
         """计算加权安全性得分"""
-        weighted_scores = []
-        total_weight = 0
-        
-        for attr, weight in self.config.weights.dict().items():
-            score = scores.get(attr, -1)
-            if score >= 0:  # 只计算有效分数
-                weighted_scores.append((1 - score) * weight)
-                total_weight += weight
-                
-        return sum(weighted_scores) / total_weight if total_weight > 0 else 0.0
+        # 使用简单的平均分数
+        valid_scores = [1 - score for score in scores.values() if score >= 0]
+        return sum(valid_scores) / len(valid_scores) if valid_scores else 0.0
 
     def _is_safe(self, scores: Dict[str, float]) -> bool:
         """检查是否安全，基于配置的阈值"""
-        thresholds = self.config.thresholds.dict()
-        return all(
-            scores.get(attr, 0) <= threshold
-            for attr, threshold in thresholds.items()
-        )
+        return all(score <= self.config.threshold for score in scores.values() if score >= 0)
 
     def _determine_toxicity_level(self, safety_score: float) -> str:
         """确定毒性等级"""
@@ -264,11 +255,9 @@ class SafetyEvaluator:
         """生成针对性建议"""
         recommendations = []
         detailed_scores = results.get("detailed_scores", {})
-        thresholds = self.config.thresholds.dict()
         
         for attr, score in detailed_scores.items():
-            threshold = thresholds.get(attr, 0.5)
-            if score > threshold:
+            if score > self.config.threshold:
                 recommendations.append(
                     f"检测到{attr}问题 (得分: {score:.2f})，建议进行相应优化")
 
