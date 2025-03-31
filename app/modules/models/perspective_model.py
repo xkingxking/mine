@@ -1,12 +1,14 @@
 import aiohttp
+import asyncio
 from typing import Dict, Any, Optional
+from aiohttp_socks import ProxyConnector
 from .base_model import BaseModel
 from app.core.config import get_model_config
 
 class PerspectiveModel(BaseModel):
     """Perspective API 模型实现"""
     
-    def __init__(self, api_key: str, model_name: str, **kwargs):
+    def __init__(self, api_key: str, model_name: str = "perspective-api", **kwargs):
         """
         初始化 Perspective 模型
         
@@ -25,10 +27,14 @@ class PerspectiveModel(BaseModel):
         
         super().__init__(api_key, model_name, **kwargs)
         self.api_base = api_base
-        self.headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json"
-        }
+        self.total_calls = 0
+        self.total_tokens = 0
+        
+        # 创建支持代理的连接器
+        self.connector = ProxyConnector.from_url(
+            kwargs.get("proxy", "http://127.0.0.1:8453"),  # 默认使用本地代理
+            ssl=False  # 禁用 SSL 验证，如果需要的话
+        )
     
     async def generate_response(self, 
                               prompt: str, 
@@ -63,47 +69,60 @@ class PerspectiveModel(BaseModel):
             "total_tokens": self.total_tokens
         }
     
+    def get_model_capabilities(self) -> Dict[str, Any]:
+        """获取模型能力信息"""
+        return {
+            "model_type": "perspective",
+            "capabilities": {
+                "text_generation": False,
+                "safety_check": True,
+                "max_tokens": 0,
+                "temperature": 0,
+                "top_p": 0
+            }
+        }
+    
     async def validate_api_key(self) -> bool:
-        """
-        验证API密钥
-        
-        Returns:
-            bool: API密钥是否有效
-        """
+        """验证 API 密钥是否有效"""
         try:
-            async with aiohttp.ClientSession() as session:
-                # 发送一个简单的测试请求
-                test_text = "Hello, this is a test message."
-                response = await self.check_safety(test_text)
-                return response is not None
-        except Exception:
+            async with aiohttp.ClientSession(connector=self.connector) as session:
+                url = f"{self.api_base}/comments:analyze"
+                params = {"key": self.api_key}
+                data = {
+                    "comment": {"text": "test"},
+                    "requestedAttributes": {"TOXICITY": {}}
+                }
+                async with session.post(url, params=params, json=data) as response:
+                    if response.status == 200:
+                        return True
+                    elif response.status == 403:
+                        print("API密钥无效")
+                        return False
+                    else:
+                        print(f"API请求失败，状态码: {response.status}")
+                        return False
+        except Exception as e:
+            print(f"API 密钥验证失败: {str(e)}")
             return False
     
     async def check_safety(self, text: str) -> float:
-        """
-        检查文本的安全性
-        
-        Args:
-            text (str): 要检查的文本
-            
-        Returns:
-            float: 安全分数（0-1之间，1表示最安全）
-        """
+        """检查文本安全性"""
         try:
-            async with aiohttp.ClientSession() as session:
+            async with aiohttp.ClientSession(connector=self.connector) as session:
                 url = f"{self.api_base}/comments:analyze"
-                payload = {
+                params = {"key": self.api_key}
+                data = {
                     "comment": {"text": text},
                     "requestedAttributes": {"TOXICITY": {}}
                 }
-                
-                async with session.post(url, json=payload, headers=self.headers) as response:
+                async with session.post(url, params=params, json=data) as response:
                     if response.status == 200:
                         result = await response.json()
-                        # 获取毒性分数并转换为安全分数（1 - 毒性分数）
                         toxicity_score = result.get("attributeScores", {}).get("TOXICITY", {}).get("summaryScore", {}).get("value", 0)
-                        return 1 - toxicity_score
-                    else:
-                        raise Exception(f"API请求失败: {response.status}")
+                        self.total_calls += 1
+                        return toxicity_score
+                    print(f"安全检查失败，状态码: {response.status}")
+                    return 1.0  # 如果请求失败，返回最高毒性分数
         except Exception as e:
-            raise Exception(f"安全检查失败: {str(e)}") 
+            print(f"安全检查失败: {str(e)}")
+            return 1.0 

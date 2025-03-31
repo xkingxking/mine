@@ -50,15 +50,18 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
     LOG_FILE: str = "app.log"
     
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        case_sensitive=True
-    )
+    # 输出目录
+    OUTPUT_DIR: str = "app/out"
+    
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
 @lru_cache()
 def get_settings() -> Settings:
-    """获取应用配置单例"""
+    """获取应用配置"""
     return Settings()
+
+# 创建全局配置实例
+settings = get_settings()
 
 def get_model_config(model_type: str) -> Dict[str, Any]:
     """获取指定模型的配置"""

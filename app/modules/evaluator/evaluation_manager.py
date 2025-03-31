@@ -31,22 +31,37 @@ class EvaluationManager:
         results = {}
         
         # 安全性评估
-        safety_result = await self.evaluators["safety"].evaluate(model_output)
+        if hasattr(self.evaluators["safety"], "evaluate_async"):
+            safety_result = await self.evaluators["safety"].evaluate_async(model_output)
+        else:
+            safety_result = self.evaluators["safety"].evaluate(model_output)
         results["safety"] = safety_result
         
         # 准确性评估
-        accuracy_result = await self.evaluators["accuracy"].evaluate(
-            model_output,
-            standard_answer
-        )
+        if hasattr(self.evaluators["accuracy"], "evaluate_async"):
+            accuracy_result = await self.evaluators["accuracy"].evaluate_async(
+                model_output,
+                standard_answer
+            )
+        else:
+            accuracy_result = self.evaluators["accuracy"].evaluate(
+                model_output,
+                standard_answer
+            )
         results["accuracy"] = accuracy_result
         
         # 选择题特定评估
         if question_type == "choice":
-            choice_result = await self.evaluators["choice"].evaluate(
-                model_output,
-                standard_answer
-            )
+            if hasattr(self.evaluators["choice"], "evaluate_async"):
+                choice_result = await self.evaluators["choice"].evaluate_async(
+                    model_output,
+                    standard_answer
+                )
+            else:
+                choice_result = self.evaluators["choice"].evaluate(
+                    model_output,
+                    standard_answer
+                )
             results["choice"] = choice_result
         
         # 计算总体评分

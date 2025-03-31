@@ -51,9 +51,11 @@ async def test_api_keys():
         # 创建Perspective模型实例
         perspective_model = ModelFactory.create_model(
             "perspective",
-            api_key=perspective_key,
+            api_key=perspective_key,  # 使用环境变量中的 API 密钥
             model_name="perspective-api"
         )
+        print(f"使用 Perspective API 密钥: {perspective_key[:8]}...")  # 只打印前8位，保护密钥安全
+        
         # 验证API密钥
         is_valid = await perspective_model.validate_api_key()
         assert is_valid, "Perspective API密钥无效"
@@ -65,6 +67,7 @@ async def test_api_keys():
         print(f"Perspective API 测试成功，安全分数: {safety_score}")
         
     except Exception as e:
+        print(f"Perspective API 错误详情: {str(e)}")  # 添加更详细的错误信息
         pytest.fail(f"Perspective API 测试失败: {str(e)}")
 
 if __name__ == "__main__":

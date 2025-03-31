@@ -28,8 +28,8 @@ class QuestionLoader:
             
         with open(self.questions_file, "r", encoding="utf-8") as f:
             data = json.load(f)
-            self.metadata = data.get("metadata", {})
-            self.questions = data.get("questions", [])
+            # 直接使用加载的数据作为题目列表
+            self.questions = data
             return self.questions
     
     def get_question_by_id(self, question_id: str) -> Dict[str, Any]:

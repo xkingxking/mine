@@ -1,3 +1,3 @@
 @echo off
 set PYTHONPATH=%PYTHONPATH%;%CD%
-pytest tests/test_api_keys.py -v 
+python app/main.py --model deepseek --questions app/data/questions/test_questions.json --output app/out 

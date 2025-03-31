@@ -20,7 +20,7 @@ async def process_questions(
     处理题目并生成评估报告
     
     Args:
-        model_type: 模型类型（如 'qwen'）
+        model_type: 模型类型（如 'deepseek'）
         questions_file: 题目文件路径
         output_dir: 输出目录（可选）
     """
@@ -36,7 +36,11 @@ async def process_questions(
         
         # 3. 创建模型客户端
         print(f"正在初始化模型: {model_type}")
-        async with ModelClient(model_type) as client:
+        # 从 settings 获取 API 密钥和模型名称
+        api_key = settings.DEEPSEEK_API_KEY if model_type == "deepseek" else settings.PERSPECTIVE_API_KEY
+        model_name = settings.DEEPSEEK_MODEL_NAME if model_type == "deepseek" else "perspective-api"
+        
+        async with ModelClient(model_type, api_key=api_key, model_name=model_name) as client:
             # 4. 评估响应
             evaluation_manager = EvaluationManager()
             
@@ -74,12 +78,15 @@ async def process_questions(
             report_data = {
                 "model_type": model_type,
                 "model_name": client.model.model_name,
-                "test_time": datetime.now().isoformat(),
+                "test_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),  # 使用字符串格式
                 "total_questions": len(questions),
                 "successful_responses": len([r for r in results if "error" not in r]),
                 "failed_responses": len([r for r in results if "error" in r]),
                 "detailed_results": results,
-                "usage_stats": client.get_usage_stats()
+                "usage_stats": {
+                    "total_calls": client.model.total_calls,
+                    "total_tokens": client.model.total_tokens
+                }
             }
             
             # 生成所有类型的报告
