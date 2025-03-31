@@ -120,45 +120,49 @@ class ReportGenerator:
         plt.savefig(charts_dir / f"{filename_prefix}_domains.png")
         plt.close()
     
-    def generate_summary_report(self, results: Dict[str, Any], filename: str):
-        """
-        生成总结报告
-        
-        Args:
-            results (Dict[str, Any]): 评估结果
-            filename (str): 输出文件名
-        """
-        # 提取关键信息
-        summary = {
-            "model_info": {
-                "type": results.get("model_type"),
-                "name": results.get("model_name"),
-                "test_time": results.get("test_time")
-            },
-            "test_statistics": {
-                "total_questions": results.get("total_questions", 0),
-                "successful_responses": results.get("successful_responses", 0),
-                "failed_responses": results.get("failed_responses", 0),
-                "success_rate": round(
-                    results.get("successful_responses", 0) / 
-                    results.get("total_questions", 1) * 100, 2
-                )
-            },
-            "performance_metrics": {
-                "average_safety_score": results.get("average_safety_score", 0),
-                "average_accuracy_score": sum(
-                    r.get("evaluation_results", {}).get("accuracy", {}).get("accuracy_score", 0)
-                    for r in results.get("detailed_results", []) if "error" not in r
-                ) / len([r for r in results.get("detailed_results", []) if "error" not in r]) if results.get("detailed_results") else 0
-            },
-            "usage_statistics": results.get("usage_stats", {})
-        }
-        
-        # 保存总结报告
-        output_file = self.output_dir / filename
-        with open(output_file, "w", encoding="utf-8") as f:
-            json.dump(summary, f, ensure_ascii=False, indent=2)
-        print(f"总结报告已保存到: {output_file}")
+    def generate_summary_report(self, report_data: Dict[str, Any], model_type: str) -> None:
+        """生成摘要报告"""
+        try:
+            # 计算平均分数
+            safety_scores = [result["evaluation_results"]["safety"]["safety_score"] 
+                           for result in report_data["detailed_results"]]
+            accuracy_scores = [result["evaluation_results"]["accuracy"]["accuracy_score"] 
+                             for result in report_data["detailed_results"]]
+            
+            # 计算平均值
+            avg_safety_score = sum(safety_scores) / len(safety_scores) if safety_scores else 0
+            avg_accuracy_score = sum(accuracy_scores) / len(accuracy_scores) if accuracy_scores else 0
+            
+            # 生成摘要报告
+            summary_report = {
+                "model_info": {
+                    "type": model_type,
+                    "name": report_data["model_name"],
+                    "test_time": report_data["test_time"]
+                },
+                "test_statistics": {
+                    "total_questions": report_data["total_questions"],
+                    "successful_responses": report_data["successful_responses"],
+                    "failed_responses": report_data["failed_responses"],
+                    "success_rate": round(report_data["successful_responses"] / report_data["total_questions"] * 100, 2)
+                },
+                "performance_metrics": {
+                    "average_safety_score": round(avg_safety_score, 4),
+                    "average_accuracy_score": round(avg_accuracy_score, 4)
+                },
+                "usage_statistics": report_data["usage_stats"]
+            }
+            
+            # 保存摘要报告
+            summary_file = self.output_dir / f"{model_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}_summary.json"
+            with open(summary_file, "w", encoding="utf-8") as f:
+                json.dump(summary_report, f, ensure_ascii=False, indent=2)
+            
+            print(f"摘要报告已生成: {summary_file}")
+            
+        except Exception as e:
+            print(f"生成摘要报告时出错: {str(e)}")
+            raise
     
     def generate_all_reports(self, results: Dict[str, Any], model_type: str):
         """
@@ -181,4 +185,4 @@ class ReportGenerator:
         self.generate_visualizations(results, filename_prefix)
         
         # 生成总结报告
-        self.generate_summary_report(results, f"{filename_prefix}_summary.json") 
+        self.generate_summary_report(results, model_type) 

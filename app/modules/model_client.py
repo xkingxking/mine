@@ -12,7 +12,8 @@ class ModelClient:
                  api_key: str,
                  model_name: str,
                  max_retries: int = 3, 
-                 retry_delay: float = 1.0):
+                 retry_delay: float = 1.0,
+                 **kwargs):  # 添加 **kwargs 以接收其他参数
         """
         初始化模型客户端
         
@@ -22,11 +23,13 @@ class ModelClient:
             model_name (str): 模型名称
             max_retries (int): 最大重试次数
             retry_delay (float): 重试延迟（秒）
+            **kwargs: 其他参数，包括代理设置等
         """
         self.model = ModelFactory.create_model(
             model_type=model_type,
             api_key=api_key,
-            model_name=model_name
+            model_name=model_name,
+            **kwargs  # 传递所有额外参数
         )
         self.max_retries = max_retries
         self.retry_delay = retry_delay

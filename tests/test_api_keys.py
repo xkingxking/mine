@@ -7,6 +7,9 @@ from app.modules.models.model_factory import ModelFactory
 # 加载环境变量
 load_dotenv()
 
+# 代理设置
+PROXY_URL = "http://127.0.0.1:8453"  # 默认代理地址
+
 @pytest.mark.asyncio
 async def test_api_keys():
     """测试API密钥是否正确配置并能正常使用"""
@@ -19,6 +22,7 @@ async def test_api_keys():
     print(f"DEEPSEEK_API_KEY: {'已设置' if deepseek_key else '未设置'}")
     print(f"PERSPECTIVE_API_KEY: {'已设置' if perspective_key else '未设置'}")
     print(f"DEEPSEEK_MODEL_NAME: {deepseek_model_name}")
+    print(f"使用代理: {PROXY_URL}")
     
     assert deepseek_key is not None, "DEEPSEEK_API_KEY 未在环境变量中设置"
     assert perspective_key is not None, "PERSPECTIVE_API_KEY 未在环境变量中设置"
@@ -26,7 +30,7 @@ async def test_api_keys():
     assert len(perspective_key) > 0, "PERSPECTIVE_API_KEY 不能为空"
     
     # 测试DeepSeek API
-    async with ModelClient("deepseek", api_key=deepseek_key, model_name=deepseek_model_name) as client:
+    async with ModelClient("deepseek", api_key=deepseek_key, model_name=deepseek_model_name, proxy=PROXY_URL) as client:
         try:
             # 验证API密钥
             is_valid = await client.validate_api_key()
@@ -52,7 +56,8 @@ async def test_api_keys():
         perspective_model = ModelFactory.create_model(
             "perspective",
             api_key=perspective_key,  # 使用环境变量中的 API 密钥
-            model_name="perspective-api"
+            model_name="perspective-api",
+            proxy=PROXY_URL  # 添加代理设置
         )
         print(f"使用 Perspective API 密钥: {perspective_key[:8]}...")  # 只打印前8位，保护密钥安全
         

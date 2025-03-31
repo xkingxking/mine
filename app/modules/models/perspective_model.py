@@ -30,11 +30,24 @@ class PerspectiveModel(BaseModel):
         self.total_calls = 0
         self.total_tokens = 0
         
-        # 创建支持代理的连接器
-        self.connector = ProxyConnector.from_url(
-            kwargs.get("proxy", "http://127.0.0.1:8453"),  # 默认使用本地代理
-            ssl=False  # 禁用 SSL 验证，如果需要的话
-        )
+        # 获取代理设置
+        proxy_url = kwargs.get("proxy")
+        if not proxy_url:
+            print("警告：未设置代理，将尝试直接连接")
+            self.connector = aiohttp.TCPConnector(ssl=False)
+        else:
+            print(f"使用代理: {proxy_url}")
+            try:
+                self.connector = ProxyConnector.from_url(
+                    proxy_url,
+                    ssl=False,
+                    force_close=True,
+                    enable_cleanup_closed=True
+                )
+            except Exception as e:
+                print(f"代理连接器创建失败: {str(e)}")
+                print("尝试使用直接连接")
+                self.connector = aiohttp.TCPConnector(ssl=False)
     
     async def generate_response(self, 
                               prompt: str, 
@@ -126,3 +139,42 @@ class PerspectiveModel(BaseModel):
         except Exception as e:
             print(f"安全检查失败: {str(e)}")
             return 1.0 
+    
+    async def test_connection(self) -> bool:
+        """测试网络连接"""
+        try:
+            print("正在测试网络连接...")
+            async with aiohttp.ClientSession(connector=self.connector) as session:
+                # 首先测试代理连接
+                if isinstance(self.connector, ProxyConnector):
+                    print("正在测试代理连接...")
+                    try:
+                        async with session.get("http://www.google.com", timeout=10) as response:
+                            if response.status == 200:
+                                print("代理连接测试成功")
+                            else:
+                                print(f"代理连接测试失败，状态码: {response.status}")
+                    except Exception as e:
+                        print(f"代理连接测试失败: {str(e)}")
+                
+                # 测试 API 连接
+                print("正在测试 API 连接...")
+                url = f"{self.api_base}/comments:analyze"
+                params = {"key": self.api_key}
+                data = {
+                    "comment": {"text": "test"},
+                    "requestedAttributes": {"TOXICITY": {}}
+                }
+                async with session.post(url, params=params, json=data, timeout=10) as response:
+                    if response.status == 200:
+                        print("API 连接测试成功")
+                        return True
+                    elif response.status == 403:
+                        print("API 密钥无效")
+                        return False
+                    else:
+                        print(f"API 连接测试失败，状态码: {response.status}")
+                        return False
+        except Exception as e:
+            print(f"网络连接测试失败: {str(e)}")
+            return False 

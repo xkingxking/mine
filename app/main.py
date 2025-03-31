@@ -1,8 +1,10 @@
 import asyncio
 import argparse
+import os
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
+from dotenv import load_dotenv
 
 from app.modules.question_loader import QuestionLoader
 from app.modules.prompt_builder import PromptBuilder
@@ -11,10 +13,14 @@ from app.modules.evaluator.evaluation_manager import EvaluationManager
 from app.modules.reporting.report_generator import ReportGenerator
 from app.core.config import settings
 
+# 加载环境变量
+load_dotenv()
+
 async def process_questions(
     model_type: str,
     questions_file: str,
-    output_dir: Optional[str] = None
+    output_dir: Optional[str] = None,
+    proxy: Optional[str] = None
 ) -> None:
     """
     处理题目并生成评估报告
@@ -23,6 +29,7 @@ async def process_questions(
         model_type: 模型类型（如 'deepseek'）
         questions_file: 题目文件路径
         output_dir: 输出目录（可选）
+        proxy: 代理服务器地址（可选）
     """
     try:
         # 1. 加载题目
@@ -36,13 +43,25 @@ async def process_questions(
         
         # 3. 创建模型客户端
         print(f"正在初始化模型: {model_type}")
-        # 从 settings 获取 API 密钥和模型名称
-        api_key = settings.DEEPSEEK_API_KEY if model_type == "deepseek" else settings.PERSPECTIVE_API_KEY
-        model_name = settings.DEEPSEEK_MODEL_NAME if model_type == "deepseek" else "perspective-api"
+        # 直接从环境变量获取 API 密钥和模型名称
+        api_key = os.getenv('DEEPSEEK_API_KEY') if model_type == "deepseek" else os.getenv('PERSPECTIVE_API_KEY')
+        model_name = os.getenv('DEEPSEEK_MODEL_NAME', 'deepseek-chat') if model_type == "deepseek" else "perspective-api"
         
-        async with ModelClient(model_type, api_key=api_key, model_name=model_name) as client:
+        if not api_key:
+            raise ValueError(f"未找到 {model_type} 的 API 密钥")
+            
+        print(f"使用代理: {proxy}")
+        async with ModelClient(model_type, api_key=api_key, model_name=model_name, proxy=proxy) as client:
+            # 测试网络连接
+            if model_type == "perspective":
+                print("正在测试 Perspective API 网络连接...")
+                is_connected = await client.model.test_connection()
+                if not is_connected:
+                    print("警告：网络连接测试失败，请检查网络设置和代理配置")
+                    return
+            
             # 4. 评估响应
-            evaluation_manager = EvaluationManager()
+            evaluation_manager = EvaluationManager(proxy=proxy)
             
             # 5. 生成报告
             report_generator = ReportGenerator(output_dir)
@@ -118,6 +137,12 @@ def main():
         type=str,
         help="输出目录（可选）"
     )
+    parser.add_argument(
+        "--proxy",
+        type=str,
+        default="http://127.0.0.1:8453",
+        help="代理服务器地址（可选，默认：http://127.0.0.1:8453）"
+    )
     
     args = parser.parse_args()
     
@@ -132,7 +157,8 @@ def main():
     asyncio.run(process_questions(
         model_type=args.model,
         questions_file=args.questions,
-        output_dir=str(output_dir)
+        output_dir=str(output_dir),
+        proxy=args.proxy
     ))
 
 if __name__ == "__main__":
