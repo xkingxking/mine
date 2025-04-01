@@ -7,9 +7,9 @@ import os
 import logging
 
 logging.basicConfig(
-    filename='evaluator.log',         # 日志文件名
-    level=logging.DEBUG,        # 日志级别
-    format='%(asctime)s %(levelname)s: %(message)s'  # 输出格式，包含时间戳
+    filename='evaluator.log',
+    level=logging.DEBUG,
+    format='%(asctime)s %(levelname)s: %(message)s'
 )
 
 def send_to_deepseek(prompt):
@@ -35,7 +35,7 @@ def send_to_deepseek(prompt):
         "max_tokens": 2048
     }
     try:
-        response = requests.post(api_url, headers=headers, json=payload, timeout=10)
+        response = requests.post(api_url, headers=headers, json=payload, timeout=60)
         logging.debug(f"API请求返回状态码：{response.status_code}")
         if response.status_code == 200:
             logging.debug("Deepseek API 连接成功。")
@@ -92,17 +92,17 @@ def build_prompt(original, transformed_list):
         prompt += f"选项：{trans_options_str}\n"
         prompt += f"答案：{trans_answer}\n\n"
 
-    prompt += "评价指标（都从0（完全无光）到1（完全一致）进行打分）：\n"
+    prompt += "评价指标（都从0（完全否定）到1（完全肯定）进行打分）：\n"
     prompt += "文本相似度：衡量原始题目和变形题目文本内容的相似程度。\n"
     prompt += "测试指标一致性：评估题目在变形后是否仍然考查同一能力或知识点（如安全性、语言能力、推理能力等），以及是否能正确反映预设的测试指标。\n"
     prompt += "语义清晰度与表达准确性：评估变形后的题目是否表述清晰、无歧义，同时语法和用词是否正确，使受测者能够准确理解题意\n"
-    prompt += "关键字段一致性：检查关键字段（如 type、options、format）在两个题目中的一致性。\n\n"
+    prompt += "可评估性：判断题目是否依然具有明确的标准答案或评分标准，从而便于对大模型的回答进行自动或人工评估。\n\n"
 
     prompt += "请你按照如下格式举例输出每道题的指标得分，不需要其他任何多余的输出（一定不要有任何多余的输出），只需要按照如下格式以全角逗号分隔输出所有指标得分：\n"
     prompt += "文本相似度：1，0.9，0.7，0.8\n"
     prompt += "测试指标一致性：1，0.8，0.9，0.9\n"
     prompt += "语义清晰度与表达准确性：1，0.7，0.9，0.8\n"
-    prompt += "关键字段一致性：0.9，1，0.7，0.8\n"
+    prompt += "可评估性：0.9，1，0.7，0.8\n"
 
     return prompt
 
@@ -115,7 +115,7 @@ def parse_deepseek_response(response, num_questions):
         "文本相似度": [],
         "测试指标一致性": [],
         "语义清晰度与表达准确性": [],
-        "关键字段一致性": []
+        "可评估性": []
     }
     lines = response.strip().split("\n")
     for line in lines:
@@ -134,10 +134,10 @@ def parse_deepseek_response(response, num_questions):
                 part = line.split("语义清晰度与表达准确性：", 1)[1].strip()
                 part = part.replace(',', '，')
                 scores["语义清晰度与表达准确性"] = [float(x.strip()) for x in part.split("，") if x.strip() != ""]
-            elif line.startswith("关键字段一致性："):
-                part = line.split("关键字段一致性：", 1)[1].strip()
+            elif line.startswith("可评估性："):
+                part = line.split("可评估性：", 1)[1].strip()
                 part = part.replace(',', '，')
-                scores["关键字段一致性"] = [float(x.strip()) for x in part.split("，") if x.strip() != ""]
+                scores["可评估性"] = [float(x.strip()) for x in part.split("，") if x.strip() != ""]
         except Exception as e:
             logging.error(f"解析行 '{line}' 时发生错误: {e}")
             continue  # 跳过无法解析的行
@@ -152,10 +152,10 @@ def parse_deepseek_response(response, num_questions):
 
 def compute_comprehensive_score(ts, ti, sc, kc):
     """
-    根据各指标得分计算综合得分：文本相似度 0.2，测试指标一致性 0.3，
-    语义清晰度与表达准确性 0.3，关键字段一致性 0.2
+    根据各指标得分计算综合得分：文本相似度 0.1，测试指标一致性 0.2，
+    语义清晰度与表达准确性 0.3，可评估性 0.4
     """
-    return 0.2 * ts + 0.3 * ti + 0.3 * sc + 0.2 * kc
+    return 0.1 * ts + 0.2 * ti + 0.3 * sc + 0.4 * kc
 
 
 def main():
@@ -213,7 +213,7 @@ def main():
                 ts = scores["文本相似度"][i] if i < len(scores["文本相似度"]) else 0
                 ti = scores["测试指标一致性"][i] if i < len(scores["测试指标一致性"]) else 0
                 sc = scores["语义清晰度与表达准确性"][i] if i < len(scores["语义清晰度与表达准确性"]) else 0
-                kc = scores["关键字段一致性"][i] if i < len(scores["关键字段一致性"]) else 0
+                kc = scores["可评估性"][i] if i < len(scores["可评估性"]) else 0
                 comprehensive = compute_comprehensive_score(ts, ti, sc, kc)
                 result = {
                     "original_id": orig_id,
@@ -221,7 +221,7 @@ def main():
                     "文本相似度": ts,
                     "测试指标一致性": ti,
                     "语义清晰度与表达准确性": sc,
-                    "关键字段一致性": kc,
+                    "可评估性": kc,
                     "综合得分": comprehensive
                 }
                 evaluation_results.append(result)
