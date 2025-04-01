@@ -1,206 +1,243 @@
-from typing import Dict, Any, List
-from transformers import pipeline
-import torch
+# -*- coding: utf-8 -*-
+
+import json
+import requests
+import argparse
+import os
 import logging
 
-logger = logging.getLogger(__name__)
+logging.basicConfig(
+    filename='evaluator.log',         # 日志文件名
+    level=logging.DEBUG,        # 日志级别
+    format='%(asctime)s %(levelname)s: %(message)s'  # 输出格式，包含时间戳
+)
 
-class TransformationEvaluator:
-    """变形评估器"""
-    
-    def __init__(self):
-        """初始化评估器"""
-        self._model = None
+def send_to_deepseek(prompt):
+    """
+    将构造好的 prompt 发送给 Deepseek，并返回其返回的结果文本。
+    Deepseek 的 API key 从环境变量 DEEPSEEK_API_KEY 获取，并在请求头中携带该 key。
+    使用官方接口：https://api.deepseek.com/v1/chat/completions
+    """
+    api_key = os.environ.get("DEEPSEEK_API_KEY")
+    if not api_key:
+        raise ValueError("未设置 Deepseek 的 API key，请设置环境变量 DEEPSEEK_API_KEY")
 
-    @property
-    def model(self):
-        """懒加载模型"""
-        if self._model is None:
-            self._model = pipeline(
-                "text2text-generation",
-                model="THUDM/chatglm3-6b",
-                device="cuda" if torch.cuda.is_available() else "cpu"
-            )
-        return self._model
+    api_url = "https://api.deepseek.com/v1/chat/completions"
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}"
+    }
+    payload = {
+        "model": "deepseek-chat",
+        "messages": [
+            {"role": "user", "content": prompt}
+        ],
+        "max_tokens": 2048
+    }
+    try:
+        response = requests.post(api_url, headers=headers, json=payload, timeout=10)
+        logging.debug(f"API请求返回状态码：{response.status_code}")
+        if response.status_code == 200:
+            logging.debug("Deepseek API 连接成功。")
+        response.raise_for_status()
+        res_json = response.json()
+        content = res_json["choices"][0]["message"]["content"]
+        return content
+    except Exception as e:
+        logging.error(f"Deepseek API 连接失败：{e}")
+        return ""
 
-    def evaluate(self, original_question: Dict[str, Any], 
-                transformed_question: Dict[str, Any]) -> Dict[str, Any]:
-        """评估题目变形质量
-        
-        Args:
-            original_question (Dict[str, Any]): 原始题目
-            transformed_question (Dict[str, Any]): 变形后的题目
-            
-        Returns:
-            Dict[str, Any]: 评估结果
-        """
-        try:
-            # 计算相似度
-            similarity = self._calculate_similarity(
-                original_question["content"],
-                transformed_question["content"]
-            )
-            
-            # 评估难度变化
-            difficulty_change = self._evaluate_difficulty_change(
-                original_question.get("difficulty", 0),
-                transformed_question.get("difficulty", 0)
-            )
-            
-            # 评估格式保持度
-            format_consistency = self._evaluate_format_consistency(
-                original_question,
-                transformed_question
-            )
-            
-            # 评估答案一致性
-            answer_consistency = self._evaluate_answer_consistency(
-                original_question.get("answer"),
-                transformed_question.get("answer")
-            )
-            
-            # 计算综合得分
-            overall_score = self._calculate_overall_score(
-                similarity,
-                difficulty_change,
-                format_consistency,
-                answer_consistency
-            )
-            
-            return {
-                "overall_score": overall_score,
-                "similarity": similarity,
-                "difficulty_change": difficulty_change,
-                "format_consistency": format_consistency,
-                "answer_consistency": answer_consistency,
-                "evaluation_status": "success"
-            }
-            
+
+def build_prompt(original, transformed_list):
+    """
+    根据原题和对应的变形题构造评估 prompt
+    """
+    # 提取原题信息
+    original_type = original.get("type", "NULL")
+    original_field = original.get("题目领域", "NULL")
+    original_test_indicator = original.get("测试指标", "NULL")
+    original_difficulty = original.get("难度级别", "NULL")
+    original_question = original.get("question", "NULL")
+    original_options = original.get("choices", "NULL")
+    if original_options != "NULL" and isinstance(original_options, dict):
+        # 将选项字典转换为字符串格式，如 "A: 选项内容；B: 选项内容"
+        original_options_str = "；".join([f"{k}: {v}" for k, v in original_options.items()])
+    else:
+        original_options_str = "NULL"
+    original_answer = original.get("answer", "NULL")
+
+    prompt = "下面我将会给你一道题目，以及用几种不同的变形方式变形得到的题目，请你从我给出的格式和评价指标对变形出来的题目进行评估。\n\n"
+    prompt += "原题：\n"
+    prompt += f"类型：{original_type}\n"
+    prompt += f"题目领域：{original_field}\n"
+    prompt += f"测试指标：{original_test_indicator}\n"
+    prompt += f"难度级别：{original_difficulty}\n"
+    prompt += f"题目：{original_question}\n"
+    prompt += f"选项：{original_options_str}\n"
+    prompt += f"答案：{original_answer}\n\n"
+
+    prompt += "变形后的题目：\n"
+    for idx, trans in enumerate(transformed_list, start=1):
+        trans_method = trans.get("transform_method", "NULL")
+        trans_question = trans.get("question", "NULL")
+        trans_options = trans.get("options", "NULL")
+        if not trans_options or trans_options == "":
+            trans_options_str = "NULL"
+        else:
+            trans_options_str = trans_options
+        trans_answer = trans.get("answer", "NULL")
+        prompt += f"【第{idx}题】\n"
+        prompt += f"变形方法：{trans_method}\n"
+        prompt += f"题目：{trans_question}\n"
+        prompt += f"选项：{trans_options_str}\n"
+        prompt += f"答案：{trans_answer}\n\n"
+
+    prompt += "评价指标（都从0（完全无光）到1（完全一致）进行打分）：\n"
+    prompt += "文本相似度：衡量原始题目和变形题目文本内容的相似程度。\n"
+    prompt += "测试指标一致性：评估题目在变形后是否仍然考查同一能力或知识点（如安全性、语言能力、推理能力等），以及是否能正确反映预设的测试指标。\n"
+    prompt += "语义清晰度与表达准确性：评估变形后的题目是否表述清晰、无歧义，同时语法和用词是否正确，使受测者能够准确理解题意\n"
+    prompt += "关键字段一致性：检查关键字段（如 type、options、format）在两个题目中的一致性。\n\n"
+
+    prompt += "请你按照如下格式举例输出每道题的指标得分，不需要其他任何多余的输出（一定不要有任何多余的输出），只需要按照如下格式以全角逗号分隔输出所有指标得分：\n"
+    prompt += "文本相似度：1，0.9，0.7，0.8\n"
+    prompt += "测试指标一致性：1，0.8，0.9，0.9\n"
+    prompt += "语义清晰度与表达准确性：1，0.7，0.9，0.8\n"
+    prompt += "关键字段一致性：0.9，1，0.7，0.8\n"
+
+    return prompt
+
+
+def parse_deepseek_response(response, num_questions):
+    """
+    根据 Deepseek 返回的结果解析各指标得分，返回字典，每个指标对应一个得分列表
+    """
+    scores = {
+        "文本相似度": [],
+        "测试指标一致性": [],
+        "语义清晰度与表达准确性": [],
+        "关键字段一致性": []
+    }
+    lines = response.strip().split("\n")
+    for line in lines:
+        line = line.strip()
+        try:  # 添加异常处理
+            if line.startswith("文本相似度："):
+                part = line.split("文本相似度：", 1)[1].strip()
+                # 替换所有半角逗号为全角
+                part = part.replace(',', '，')
+                scores["文本相似度"] = [float(x.strip()) for x in part.split("，") if x.strip() != ""]
+            elif line.startswith("测试指标一致性："):
+                part = line.split("测试指标一致性：", 1)[1].strip()
+                part = part.replace(',', '，')
+                scores["测试指标一致性"] = [float(x.strip()) for x in part.split("，") if x.strip() != ""]
+            elif line.startswith("语义清晰度与表达准确性："):
+                part = line.split("语义清晰度与表达准确性：", 1)[1].strip()
+                part = part.replace(',', '，')
+                scores["语义清晰度与表达准确性"] = [float(x.strip()) for x in part.split("，") if x.strip() != ""]
+            elif line.startswith("关键字段一致性："):
+                part = line.split("关键字段一致性：", 1)[1].strip()
+                part = part.replace(',', '，')
+                scores["关键字段一致性"] = [float(x.strip()) for x in part.split("，") if x.strip() != ""]
         except Exception as e:
-            return self._handle_evaluation_error(str(e))
+            logging.error(f"解析行 '{line}' 时发生错误: {e}")
+            continue  # 跳过无法解析的行
 
-    def _calculate_similarity(self, text1: str, text2: str) -> float:
-        """计算文本相似度"""
+    # 验证每个指标的数量是否匹配变形题数量
+    for key in scores:
+        if len(scores[key]) != num_questions:
+            logging.warning(f"指标 '{key}' 的得分数量 ({len(scores[key])}) 与变形题数量 ({num_questions}) 不匹配")
+
+    return scores
+
+
+def compute_comprehensive_score(ts, ti, sc, kc):
+    """
+    根据各指标得分计算综合得分：文本相似度 0.2，测试指标一致性 0.3，
+    语义清晰度与表达准确性 0.3，关键字段一致性 0.2
+    """
+    return 0.2 * ts + 0.3 * ti + 0.3 * sc + 0.2 * kc
+
+
+def main():
+    parser = argparse.ArgumentParser(description="自动题目评估")
+    parser.add_argument("--original", "-ori", type=str, required=True, help="输入原题目文件（JSON 格式）")
+    parser.add_argument("--transformed", "-t", type=str, required=True, help="输入变形题目文件（JSON 格式）")
+    parser.add_argument("--output", "-o", type=str, required=True, help="输出评估结果文件（JSON 格式）")
+    parser.add_argument("--workers", "-w", type=int, default=1, help="并行处理的线程数")
+    args = parser.parse_args()
+
+    # 读取原题库
+    with open(args.original, "r", encoding="utf-8") as f:
+        original_data = json.load(f)
+    original_questions = original_data.get("questions", [])
+
+    # 读取变形题库（支持 JSON 数组或逐行 JSON 格式）
+    transformed_questions = []
+    with open(args.transformed, "r", encoding="utf-8") as f:
         try:
-            # 使用模型计算相似度
-            inputs = f"计算以下两段文本的相似度（0-1之间）：\n文本1：{text1}\n文本2：{text2}"
-            response = self.model(inputs, max_length=100, num_return_sequences=1)
-            similarity = float(response[0]["generated_text"])
-            return max(0.0, min(1.0, similarity))
-        except (ValueError, IndexError, KeyError) as e:
-            logger.error(f"计算相似度时出错: {str(e)}")
-            return 0.0
-        except Exception as e:
-            logger.error(f"计算相似度时发生未知错误: {str(e)}")
-            return 0.0
+            transformed_questions = json.load(f)
+        except Exception:
+            f.seek(0)
+            for line in f:
+                if line.strip():
+                    transformed_questions.append(json.loads(line.strip()))
 
-    def _evaluate_difficulty_change(self, original: float, transformed: float) -> float:
-        """评估难度变化"""
-        if original == 0 or transformed == 0:
-            return 0.0
-        return 1.0 - abs(original - transformed) / max(original, transformed)
+    # 按原题 id 对变形题进行分组
+    transformed_group = {}
+    for tq in transformed_questions:
+        original_id = tq.get("original_id")
+        if original_id not in transformed_group:
+            transformed_group[original_id] = []
+        transformed_group[original_id].append(tq)
 
-    def _evaluate_format_consistency(self, original: Dict[str, Any], 
-                                  transformed: Dict[str, Any]) -> float:
-        """评估格式一致性"""
-        # 检查关键字段是否保持一致
-        key_fields = ["type", "options", "format"]
-        consistency = 0.0
-        for field in key_fields:
-            if field in original and field in transformed:
-                if original[field] == transformed[field]:
-                    consistency += 1.0
-        return consistency / len(key_fields)
+    evaluation_results = []
+    all_comprehensive_scores = []
 
-    def _evaluate_answer_consistency(self, original_answer: Any, 
-                                  transformed_answer: Any) -> float:
-        """评估答案一致性"""
-        if original_answer is None or transformed_answer is None:
-            return 0.0
-        return 1.0 if original_answer == transformed_answer else 0.0
+    # 针对每一道原题及其对应的变形题构造 prompt 并调用 Deepseek 进行评估
+    for original in original_questions:
+        orig_id = original.get("id")
+        if orig_id in transformed_group:
+            transformed_list = transformed_group[orig_id]
+            prompt = build_prompt(original, transformed_list)
 
-    def _calculate_overall_score(self, similarity: float, 
-                               difficulty_change: float,
-                               format_consistency: float,
-                               answer_consistency: float) -> float:
-        """计算综合得分"""
-        weights = {
-            "similarity": 0.4,
-            "difficulty_change": 0.2,
-            "format_consistency": 0.2,
-            "answer_consistency": 0.2
-        }
-        
-        return (
-            similarity * weights["similarity"] +
-            difficulty_change * weights["difficulty_change"] +
-            format_consistency * weights["format_consistency"] +
-            answer_consistency * weights["answer_consistency"]
-        )
+            # 调用 Deepseek 接口发送 prompt，获取返回结果
+            response = send_to_deepseek(prompt)
+            if not response:
+                print(f"原题 ID {orig_id} 的评估未获得返回结果，跳过。")
+                continue
 
-    def _handle_evaluation_error(self, error_message: str) -> Dict[str, Any]:
-        """处理评估错误"""
-        return {
-            "overall_score": 0.0,
-            "similarity": 0.0,
-            "difficulty_change": 0.0,
-            "format_consistency": 0.0,
-            "answer_consistency": 0.0,
-            "evaluation_status": "error",
-            "error_message": error_message
-        }
-
-    def generate_report(self, evaluation_results: Dict[str, Any]) -> Dict[str, Any]:
-        """生成评估报告"""
-        if evaluation_results.get("evaluation_status") == "error":
-            return {
-                "transformation_report": {
-                    "status": "error",
-                    "error_message": evaluation_results.get("error_message"),
-                    "recommendations": ["评估过程出错，请检查系统配置"]
+            num_transformed = len(transformed_list)
+            scores = parse_deepseek_response(response, num_transformed)
+            # 针对每个变形题，计算综合得分，并记录详细信息
+            for i in range(num_transformed):
+                ts = scores["文本相似度"][i] if i < len(scores["文本相似度"]) else 0
+                ti = scores["测试指标一致性"][i] if i < len(scores["测试指标一致性"]) else 0
+                sc = scores["语义清晰度与表达准确性"][i] if i < len(scores["语义清晰度与表达准确性"]) else 0
+                kc = scores["关键字段一致性"][i] if i < len(scores["关键字段一致性"]) else 0
+                comprehensive = compute_comprehensive_score(ts, ti, sc, kc)
+                result = {
+                    "original_id": orig_id,
+                    "transform_method": transformed_list[i].get("transform_method", "NULL"),
+                    "文本相似度": ts,
+                    "测试指标一致性": ti,
+                    "语义清晰度与表达准确性": sc,
+                    "关键字段一致性": kc,
+                    "综合得分": comprehensive
                 }
-            }
+                evaluation_results.append(result)
+                all_comprehensive_scores.append(comprehensive)
 
-        return {
-            "transformation_report": {
-                "status": "success",
-                "overall_score": evaluation_results["overall_score"],
-                "metrics": {
-                    "similarity": evaluation_results["similarity"],
-                    "difficulty_change": evaluation_results["difficulty_change"],
-                    "format_consistency": evaluation_results["format_consistency"],
-                    "answer_consistency": evaluation_results["answer_consistency"]
-                },
-                "recommendations": self._generate_recommendations(evaluation_results)
-            }
-        }
+    # 将详细评估结果存储到输出文件
+    with open(args.output, "w", encoding="utf-8") as f:
+        json.dump(evaluation_results, f, ensure_ascii=False, indent=4)
 
-    def _generate_recommendations(self, results: Dict[str, Any]) -> List[str]:
-        """生成改进建议
-        
-        Args:
-            results (Dict[str, Any]): 评估结果
-            
-        Returns:
-            List[str]: 改进建议列表
-        """
-        recommendations = []
-        
-        if results["similarity"] < 0.7:
-            recommendations.append("题目变形程度过大，建议保持更多原始内容")
-        elif results["similarity"] > 0.9:
-            recommendations.append("题目变形程度过小，建议增加更多变化")
-            
-        if results["difficulty_change"] < 0.5:
-            recommendations.append("难度变化过大，建议调整难度变化幅度")
-            
-        if results["format_consistency"] < 0.8:
-            recommendations.append("格式一致性较低，建议保持更多原始格式")
-            
-        if results["answer_consistency"] < 1.0:
-            recommendations.append("答案不一致，需要修正变形后的答案")
-            
-        if not recommendations:
-            recommendations.append("题目变形质量良好，无需特别处理")
-            
-        return recommendations 
+    # 计算所有变形题的平均综合得分
+    if all_comprehensive_scores:
+        avg_score = sum(all_comprehensive_scores) / len(all_comprehensive_scores)
+    else:
+        avg_score = 0
+    print("平均综合得分：", avg_score)
+
+
+if __name__ == "__main__":
+    main()
