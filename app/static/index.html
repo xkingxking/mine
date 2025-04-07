@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM 评估工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        .error {
+            color: red;
+        }
+        .success {
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <h1>LLM 评估工具</h1>
+    <form id="evaluationForm">
+        <div class="form-group">
+            <label for="model">选择模型：</label>
+            <select id="model" name="model" required>
+                <option value="deepseek">DeepSeek</option>
+                <option value="qwen">Qwen</option>
+                <!-- 可以添加更多模型选项 -->
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="dataset">选择数据集：</label>
+            <select id="dataset" name="dataset" required>
+                <option value="app/data/test_law_questions.json">法律测试集</option>
+                <option value="app/data/test_medical_questions.json">医学测试集</option>
+                <!-- 可以添加更多数据集选项 -->
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="proxy">代理地址（可选）：</label>
+            <input type="text" id="proxy" name="proxy" placeholder="http://127.0.0.1:7890">
+        </div>
+        
+        <button type="submit">开始评估</button>
+    </form>
+    
+    <div id="result"></div>
+    
+    <script>
+        document.getElementById('evaluationForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '评估中...';
+            
+            try {
+                const response = await fetch('http://localhost:8000/evaluate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        model_name: document.getElementById('model').value,
+                        dataset_path: document.getElementById('dataset').value,
+                        proxy: document.getElementById('proxy').value || null
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <p>评估完成！</p>
+                            <p>报告路径：${data.report_path}</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <p>评估失败：${data.error}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <p>请求失败：${error.message}</p>
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html> 

@@ -15,6 +15,28 @@ class QuestionLoader:
         self.questions_file = Path(questions_file)
         self.questions = []
         self.metadata = {}
+        self.domain = self._get_domain_from_filename()
+    
+    def _get_domain_from_filename(self) -> str:
+        """从文件名获取领域信息"""
+        filename = self.questions_file.name
+        domain_map = {
+            "philosophy": "哲学",
+            "medical": "医学",
+            "math": "数学",
+            "law": "法学",
+            "education": "教育",
+            "geography": "地理",
+            "economics": "经济",
+            "chinese_literature": "中国文学",
+            "chinese_history": "中国历史",
+            "humaneval": "编程"
+        }
+        
+        for key, value in domain_map.items():
+            if key in filename.lower():
+                return value
+        return "通用"
     
     def load_questions(self) -> List[Dict[str, Any]]:
         """

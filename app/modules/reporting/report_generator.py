@@ -1,7 +1,4 @@
 import json
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
 from typing import Dict, Any, List
 from datetime import datetime
 from pathlib import Path
@@ -18,209 +15,127 @@ class ReportGenerator:
         """
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
+        
+        # 创建 general 目录
+        self.general_dir = self.output_dir / "general"
+        self.general_dir.mkdir(parents=True, exist_ok=True)
     
-    def generate_json_report(self, results: Dict[str, Any], filename: str):
+    def generate_report(self, evaluation_summary: Dict[str, Any], model_name: str, questions: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
-        生成JSON格式的报告
+        生成评估报告
         
         Args:
-            results (Dict[str, Any]): 评估结果
-            filename (str): 输出文件名
-        """
-        output_file = self.output_dir / filename
-        with open(output_file, "w", encoding="utf-8") as f:
-            json.dump(results, f, ensure_ascii=False, indent=2)
-        print(f"JSON报告已保存到: {output_file}")
-    
-    def generate_excel_report(self, results: Dict[str, Any], filename: str):
-        """
-        生成Excel格式的报告
-        
-        Args:
-            results (Dict[str, Any]): 评估结果
-            filename (str): 输出文件名
-        """
-        # 提取详细结果
-        detailed_results = results.get("detailed_results", [])
-        
-        # 创建DataFrame
-        df = pd.DataFrame(detailed_results)
-        
-        # 添加时间戳
-        df["report_time"] = datetime.now().isoformat()
-        
-        # 保存到Excel
-        output_file = self.output_dir / filename
-        df.to_excel(output_file, index=False)
-        print(f"Excel报告已保存到: {output_file}")
-    
-    def generate_visualizations(self, results: Dict[str, Any], filename_prefix: str):
-        """
-        生成可视化图表
-        
-        Args:
-            results (Dict[str, Any]): 评估结果
-            filename_prefix (str): 文件名前缀
-        """
-        detailed_results = results.get("detailed_results", [])
-        metadata = results.get("metadata", {})
-        
-        # 创建图表目录
-        charts_dir = self.output_dir / "charts"
-        charts_dir.mkdir(exist_ok=True)
-        
-        # 1. 安全性评分分布
-        plt.figure(figsize=(10, 6))
-        safety_scores = [
-            r.get("evaluation_results", {}).get("safety", {}).get("safety_score", 0)
-            for r in detailed_results if "error" not in r
-        ]
-        sns.histplot(safety_scores, bins=20)
-        plt.title("安全性评分分布")
-        plt.xlabel("安全性评分")
-        plt.ylabel("频次")
-        plt.savefig(charts_dir / f"{filename_prefix}_safety_distribution.png")
-        plt.close()
-        
-        # 2. 准确性评分分布
-        plt.figure(figsize=(10, 6))
-        accuracy_scores = [
-            r.get("evaluation_results", {}).get("accuracy", {}).get("accuracy_score", 0)
-            for r in detailed_results if "error" not in r
-        ]
-        sns.histplot(accuracy_scores, bins=20)
-        plt.title("准确性评分分布")
-        plt.xlabel("准确性评分")
-        plt.ylabel("频次")
-        plt.savefig(charts_dir / f"{filename_prefix}_accuracy_distribution.png")
-        plt.close()
-        
-        # 3. 题型分布
-        plt.figure(figsize=(10, 6))
-        question_types = [r.get("question_type") for r in detailed_results if "error" not in r]
-        type_counts = pd.Series(question_types).value_counts()
-        type_counts.plot(kind="bar")
-        plt.title("题型分布")
-        plt.xlabel("题型")
-        plt.ylabel("数量")
-        plt.xticks(rotation=45)
-        plt.tight_layout()
-        plt.savefig(charts_dir / f"{filename_prefix}_question_types.png")
-        plt.close()
-        
-        # 4. 领域分布
-        plt.figure(figsize=(10, 6))
-        domains = [r.get("domain") for r in detailed_results if "error" not in r]
-        domain_counts = pd.Series(domains).value_counts()
-        domain_counts.plot(kind="bar")
-        plt.title("领域分布")
-        plt.xlabel("领域")
-        plt.ylabel("数量")
-        plt.xticks(rotation=45)
-        plt.tight_layout()
-        plt.savefig(charts_dir / f"{filename_prefix}_domains.png")
-        plt.close()
-        
-        # 5. 难度级别分布
-        plt.figure(figsize=(10, 6))
-        difficulty_levels = [r.get("难度级别", "未知") for r in detailed_results if "error" not in r]
-        difficulty_counts = pd.Series(difficulty_levels).value_counts()
-        difficulty_counts.plot(kind="bar")
-        plt.title("难度级别分布")
-        plt.xlabel("难度级别")
-        plt.ylabel("数量")
-        plt.xticks(rotation=45)
-        plt.tight_layout()
-        plt.savefig(charts_dir / f"{filename_prefix}_difficulty_levels.png")
-        plt.close()
-        
-        # 6. 测试指标分布
-        plt.figure(figsize=(10, 6))
-        test_indicators = [r.get("测试指标", "未知") for r in detailed_results if "error" not in r]
-        indicator_counts = pd.Series(test_indicators).value_counts()
-        indicator_counts.plot(kind="bar")
-        plt.title("测试指标分布")
-        plt.xlabel("测试指标")
-        plt.ylabel("数量")
-        plt.xticks(rotation=45)
-        plt.tight_layout()
-        plt.savefig(charts_dir / f"{filename_prefix}_test_indicators.png")
-        plt.close()
-    
-    def generate_summary_report(self, report_data: Dict[str, Any], model_type: str) -> None:
-        """生成摘要报告"""
-        try:
-            # 计算平均分数
-            safety_scores = [result["evaluation_results"]["safety"]["safety_score"] 
-                           for result in report_data["detailed_results"]]
-            accuracy_scores = [result["evaluation_results"]["accuracy"]["accuracy_score"] 
-                             for result in report_data["detailed_results"]]
+            evaluation_summary (Dict[str, Any]): 评估摘要
+            model_name (str): 模型名称
+            questions (List[Dict[str, Any]]): 问题列表
             
-            # 计算平均值
-            avg_safety_score = sum(safety_scores) / len(safety_scores) if safety_scores else 0
-            avg_accuracy_score = sum(accuracy_scores) / len(accuracy_scores) if accuracy_scores else 0
+        Returns:
+            Dict[str, Any]: 生成的报告
+        """
+        # 获取当前时间
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        # 构建报告内容
+        report = {
+            "model_info": {
+                "name": model_name,
+                "evaluation_time": current_time
+            },
+            "evaluation_summary": {
+                "overall_score": evaluation_summary["overall_score"],
+                "domain_scores": evaluation_summary["domain_scores"]
+            },
+            "domain_results": {}  # 按领域分组的结果
+        }
+        
+        # 按领域分组问题
+        for question in questions:
+            domain = question.get("题目领域", "通用")
+            if domain not in report["domain_results"]:
+                report["domain_results"][domain] = []
             
-            # 统计各维度的分布
-            detailed_results = report_data["detailed_results"]
-            difficulty_stats = pd.Series([r.get("难度级别", "未知") for r in detailed_results]).value_counts().to_dict()
-            domain_stats = pd.Series([r.get("domain", "未知") for r in detailed_results]).value_counts().to_dict()
-            indicator_stats = pd.Series([r.get("测试指标", "未知") for r in detailed_results]).value_counts().to_dict()
-            
-            # 生成摘要报告
-            summary_report = {
-                "model_info": {
-                    "type": model_type,
-                    "name": report_data["model_name"],
-                    "test_time": report_data["test_time"]
-                },
-                "test_statistics": {
-                    "total_questions": report_data["total_questions"],
-                    "successful_responses": report_data["successful_responses"],
-                    "failed_responses": report_data["failed_responses"],
-                    "success_rate": round(report_data["successful_responses"] / report_data["total_questions"] * 100, 2)
-                },
-                "performance_metrics": {
-                    "average_safety_score": round(avg_safety_score, 4),
-                    "average_accuracy_score": round(avg_accuracy_score, 4)
-                },
-                "distribution_stats": {
-                    "difficulty_levels": difficulty_stats,
-                    "domains": domain_stats,
-                    "test_indicators": indicator_stats
-                },
-                "usage_statistics": report_data["usage_stats"]
+            question_result = {
+                "id": question["id"],
+                "type": question.get("type", "unknown"),
+                "difficulty": question.get("难度级别", "unknown"),
+                "metric": question.get("测试指标", "unknown"),
+                "question": question["question"],
+                "standard_answer": question["answer"],
+                "model_output": question.get("model_output", "")  # 添加模型输出字段
             }
-            
-            # 保存摘要报告
-            summary_file = self.output_dir / f"{model_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}_summary.json"
-            with open(summary_file, "w", encoding="utf-8") as f:
-                json.dump(summary_report, f, ensure_ascii=False, indent=2)
-            
-            print(f"摘要报告已生成: {summary_file}")
-            
-        except Exception as e:
-            print(f"生成摘要报告时出错: {str(e)}")
-            raise
+            report["domain_results"][domain].append(question_result)
+        
+        return report
     
-    def generate_all_reports(self, results: Dict[str, Any], model_type: str):
+    def save_report(self, report: Dict[str, Any], model_name: str) -> Path:
         """
-        生成所有类型的报告
+        保存报告到文件
         
         Args:
-            results (Dict[str, Any]): 评估结果
-            model_type (str): 模型类型
+            report (Dict[str, Any]): 要保存的报告
+            model_name (str): 模型名称
+            
+        Returns:
+            Path: 保存的文件路径
         """
+        # 从报告中获取数据集名称
+        dataset_name = "unknown"
+        if "domain_results" in report and report["domain_results"]:
+            # 获取第一个领域的名称作为数据集名称
+            dataset_name = list(report["domain_results"].keys())[0]
+        
+        # 生成文件名
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename_prefix = f"{model_type}_{timestamp}"
+        filename = f"{model_name}_{dataset_name}_evaluation_{timestamp}.json"
+        output_file = self.output_dir / filename
         
-        # 生成JSON报告
-        self.generate_json_report(results, f"{filename_prefix}_full.json")
+        # 保存报告
+        with open(output_file, "w", encoding="utf-8") as f:
+            json.dump(report, f, ensure_ascii=False, indent=2)
         
-        # 生成Excel报告
-        self.generate_excel_report(results, f"{filename_prefix}_detailed.xlsx")
+        # 更新领域得分集合文件
+        domains_file = self.general_dir / f"{model_name}_domains.json"
+        try:
+            # 尝试加载现有的领域得分集合
+            with open(domains_file, "r", encoding="utf-8") as f:
+                domains_data = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            # 如果文件不存在或格式错误，创建新的领域得分集合
+            domains_data = {
+                "model_info": {
+                    "name": model_name,
+                    "last_update": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                },
+                "domains": {}
+            }
         
-        # 生成可视化图表
-        self.generate_visualizations(results, filename_prefix)
+        # 更新每个领域的得分
+        for domain, score_info in report["evaluation_summary"]["domain_scores"].items():
+            if domain not in domains_data["domains"]:
+                domains_data["domains"][domain] = {
+                    "scores": [],
+                    "average_score": 0.0,
+                    "total_evaluations": 0
+                }
+            
+            # 添加新的得分
+            domains_data["domains"][domain]["scores"].append({
+                "score": score_info["score"],
+                "timestamp": timestamp,
+                "total_questions": score_info["total_questions"],
+                "correct_answers": score_info["correct_answers"]
+            })
+            
+            # 更新平均得分
+            scores = [s["score"] for s in domains_data["domains"][domain]["scores"]]
+            domains_data["domains"][domain]["average_score"] = sum(scores) / len(scores)
+            domains_data["domains"][domain]["total_evaluations"] = len(scores)
         
-        # 生成总结报告
-        self.generate_summary_report(results, model_type) 
+        # 更新最后更新时间
+        domains_data["model_info"]["last_update"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        # 保存领域得分集合
+        with open(domains_file, "w", encoding="utf-8") as f:
+            json.dump(domains_data, f, ensure_ascii=False, indent=2)
+        
+        return output_file 

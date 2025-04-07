@@ -1,0 +1,32 @@
+{
+  "model_info": {
+    "name": "deepseek",
+    "last_update": "2025-04-07 20:18:25"
+  },
+  "domains": {
+    "法学": {
+      "scores": [
+        {
+          "score": 0.6,
+          "timestamp": "20250407_201657",
+          "total_questions": 5,
+          "correct_answers": 3
+        }
+      ],
+      "average_score": 0.6,
+      "total_evaluations": 1
+    },
+    "数学": {
+      "scores": [
+        {
+          "score": 0.0,
+          "timestamp": "20250407_201825",
+          "total_questions": 5,
+          "correct_answers": 0
+        }
+      ],
+      "average_score": 0.0,
+      "total_evaluations": 1
+    }
+  }
+}
