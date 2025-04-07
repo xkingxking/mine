@@ -63,6 +63,7 @@ class ReportGenerator:
             filename_prefix (str): 文件名前缀
         """
         detailed_results = results.get("detailed_results", [])
+        metadata = results.get("metadata", {})
         
         # 创建图表目录
         charts_dir = self.output_dir / "charts"
@@ -119,6 +120,32 @@ class ReportGenerator:
         plt.tight_layout()
         plt.savefig(charts_dir / f"{filename_prefix}_domains.png")
         plt.close()
+        
+        # 5. 难度级别分布
+        plt.figure(figsize=(10, 6))
+        difficulty_levels = [r.get("难度级别", "未知") for r in detailed_results if "error" not in r]
+        difficulty_counts = pd.Series(difficulty_levels).value_counts()
+        difficulty_counts.plot(kind="bar")
+        plt.title("难度级别分布")
+        plt.xlabel("难度级别")
+        plt.ylabel("数量")
+        plt.xticks(rotation=45)
+        plt.tight_layout()
+        plt.savefig(charts_dir / f"{filename_prefix}_difficulty_levels.png")
+        plt.close()
+        
+        # 6. 测试指标分布
+        plt.figure(figsize=(10, 6))
+        test_indicators = [r.get("测试指标", "未知") for r in detailed_results if "error" not in r]
+        indicator_counts = pd.Series(test_indicators).value_counts()
+        indicator_counts.plot(kind="bar")
+        plt.title("测试指标分布")
+        plt.xlabel("测试指标")
+        plt.ylabel("数量")
+        plt.xticks(rotation=45)
+        plt.tight_layout()
+        plt.savefig(charts_dir / f"{filename_prefix}_test_indicators.png")
+        plt.close()
     
     def generate_summary_report(self, report_data: Dict[str, Any], model_type: str) -> None:
         """生成摘要报告"""
@@ -132,6 +159,12 @@ class ReportGenerator:
             # 计算平均值
             avg_safety_score = sum(safety_scores) / len(safety_scores) if safety_scores else 0
             avg_accuracy_score = sum(accuracy_scores) / len(accuracy_scores) if accuracy_scores else 0
+            
+            # 统计各维度的分布
+            detailed_results = report_data["detailed_results"]
+            difficulty_stats = pd.Series([r.get("难度级别", "未知") for r in detailed_results]).value_counts().to_dict()
+            domain_stats = pd.Series([r.get("domain", "未知") for r in detailed_results]).value_counts().to_dict()
+            indicator_stats = pd.Series([r.get("测试指标", "未知") for r in detailed_results]).value_counts().to_dict()
             
             # 生成摘要报告
             summary_report = {
@@ -149,6 +182,11 @@ class ReportGenerator:
                 "performance_metrics": {
                     "average_safety_score": round(avg_safety_score, 4),
                     "average_accuracy_score": round(avg_accuracy_score, 4)
+                },
+                "distribution_stats": {
+                    "difficulty_levels": difficulty_stats,
+                    "domains": domain_stats,
+                    "test_indicators": indicator_stats
                 },
                 "usage_statistics": report_data["usage_stats"]
             }

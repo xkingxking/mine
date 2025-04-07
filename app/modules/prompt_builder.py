@@ -34,6 +34,7 @@ class PromptBuilder:
             2. 考虑多个可能的解决方案
             3. 评估每个方案的优缺点
             4. 给出最合理的建议"""
+            #这边可以补全其他题型的提示词
         }
     
     def build_prompt(self, 
@@ -64,10 +65,13 @@ class PromptBuilder:
         题目：{question['question']}
         类型：{question['type']}
         领域：{question.get('题目领域', '未知')}
+        难度：{question.get('难度级别', '未知')}
+        测试指标：{question.get('测试指标', '未知')}
         """
         
         if "choices" in question:
-            user += f"\n选项：{json.dumps(question['choices'], ensure_ascii=False)}"
+            choices_str = "\n".join([f"{k}. {v}" for k, v in question['choices'].items()])
+            user += f"\n选项：\n{choices_str}"
         
         # 根据题型添加特定指令
         user += self._get_type_specific_instruction(question["type"])

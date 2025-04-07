@@ -28,8 +28,27 @@ class QuestionLoader:
             
         with open(self.questions_file, "r", encoding="utf-8") as f:
             data = json.load(f)
-            # 直接使用加载的数据作为题目列表
-            self.questions = data
+            
+            # 检查数据格式
+            if isinstance(data, dict):
+                # 如果是字典格式，提取元数据和题目列表
+                self.metadata = {k: v for k, v in data.items() if k != "questions"}
+                self.questions = data.get("questions", [])
+            elif isinstance(data, list):
+                # 如果是列表格式，直接使用
+                self.questions = data
+            else:
+                raise ValueError(f"不支持的数据格式: {type(data)}")
+            
+            # 验证每个题目的格式
+            required_fields = ["id", "type", "question"]
+            for q in self.questions:
+                if not isinstance(q, dict):
+                    raise ValueError(f"题目必须是字典格式: {q}")
+                missing_fields = [f for f in required_fields if f not in q]
+                if missing_fields:
+                    raise ValueError(f"题目缺少必要字段 {missing_fields}: {q}")
+            
             return self.questions
     
     def get_question_by_id(self, question_id: str) -> Dict[str, Any]:

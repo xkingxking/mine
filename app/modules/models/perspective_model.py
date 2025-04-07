@@ -1,5 +1,6 @@
 import aiohttp
 import asyncio
+import json
 from typing import Dict, Any, Optional
 from aiohttp_socks import ProxyConnector
 from .base_model import BaseModel
@@ -48,6 +49,21 @@ class PerspectiveModel(BaseModel):
                 print(f"代理连接器创建失败: {str(e)}")
                 print("尝试使用直接连接")
                 self.connector = aiohttp.TCPConnector(ssl=False)
+        
+        # 创建会话
+        self._session = None
+    
+    async def __aenter__(self):
+        """异步上下文管理器入口"""
+        if self._session is None:
+            self._session = aiohttp.ClientSession(connector=self.connector)
+        return self
+    
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """异步上下文管理器出口"""
+        if self._session:
+            await self._session.close()
+            self._session = None
     
     async def generate_response(self, 
                               prompt: str, 
@@ -118,27 +134,78 @@ class PerspectiveModel(BaseModel):
             print(f"API 密钥验证失败: {str(e)}")
             return False
     
-    async def check_safety(self, text: str) -> float:
-        """检查文本安全性"""
+    async def check_safety(self, text: str) -> Dict[str, Any]:
+        """
+        检查文本安全性
+        
+        Args:
+            text (str): 待检查的文本
+            
+        Returns:
+            Dict[str, Any]: 包含毒性分数的字典
+        """
+        print("\n=== 开始调用 Perspective API ===")
+        print(f"待检查文本: {text[:100]}...")
+        
+        if not self._session:
+            print("创建新的 aiohttp 会话...")
+            self._session = aiohttp.ClientSession(connector=self.connector)
+            
         try:
-            async with aiohttp.ClientSession(connector=self.connector) as session:
-                url = f"{self.api_base}/comments:analyze"
-                params = {"key": self.api_key}
-                data = {
-                    "comment": {"text": text},
-                    "requestedAttributes": {"TOXICITY": {}}
+            # 构建请求URL
+            url = f"{self.api_base}/comments:analyze"
+            print(f"请求URL: {url}")
+            
+            # 构建请求体
+            request_body = {
+                "comment": {"text": text},
+                "languages": ["zh"],
+                "requestedAttributes": {
+                    "TOXICITY": {}
                 }
-                async with session.post(url, params=params, json=data) as response:
-                    if response.status == 200:
-                        result = await response.json()
-                        toxicity_score = result.get("attributeScores", {}).get("TOXICITY", {}).get("summaryScore", {}).get("value", 0)
-                        self.total_calls += 1
-                        return toxicity_score
+            }
+            print(f"请求体: {json.dumps(request_body, ensure_ascii=False, indent=2)}")
+            
+            # 发送请求
+            print("正在发送 API 请求...")
+            async with self._session.post(
+                url,
+                json=request_body,
+                params={"key": self.api_key}
+            ) as response:
+                print(f"API 响应状态码: {response.status}")
+                
+                if response.status == 200:
+                    result = await response.json()
+                    print(f"API 响应内容: {json.dumps(result, ensure_ascii=False, indent=2)}")
+                    
+                    toxicity = result.get("attributeScores", {}).get("TOXICITY", {}).get("summaryScore", {}).get("value", 0.0)
+                    print(f"提取的毒性分数: {toxicity}")
+                    
+                    return {
+                        "toxicity_score": toxicity,
+                        "evaluation_status": "success"
+                    }
+                else:
                     print(f"安全检查失败，状态码: {response.status}")
-                    return 1.0  # 如果请求失败，返回最高毒性分数
+                    error_text = await response.text()
+                    print(f"错误详情: {error_text}")
+                    return {
+                        "toxicity_score": 0.0,
+                        "evaluation_status": "error",
+                        "error_message": f"API请求失败，状态码: {response.status}"
+                    }
+                    
         except Exception as e:
-            print(f"安全检查失败: {str(e)}")
-            return 1.0 
+            print(f"安全检查出错: {str(e)}")
+            print(f"错误类型: {type(e)}")
+            import traceback
+            print(f"错误堆栈: {traceback.format_exc()}")
+            return {
+                "toxicity_score": 0.0,
+                "evaluation_status": "error",
+                "error_message": str(e)
+            }
     
     async def test_connection(self) -> bool:
         """测试网络连接"""
