@@ -244,7 +244,7 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { fetchQuestionBanks, fetchAllBankQuestions } from '@/api/questionBank'
@@ -543,6 +543,13 @@ const getQuestionTitle = (questionId) => {
     const formatDate = (date) => {
       return new Date(date).toLocaleString()
     }
+
+    // 监听 loading 状态变化
+    watch(loading, (newValue, oldValue) => {
+      if (oldValue === true && newValue === false) {
+        ElMessage.success('测试完毕，请查看测试报告！')
+      }
+    })
 
     return {
       tests,

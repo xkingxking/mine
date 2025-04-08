@@ -1,7 +1,7 @@
 {
   "model_info": {
     "name": "deepseek",
-    "last_update": "2025-04-08 17:20:27"
+    "last_update": "2025-04-08 18:51:55"
   },
   "domains": {
     "法学": {
@@ -29,10 +29,16 @@
           "timestamp": "2025-04-08 17:20:27",
           "total_questions": 5,
           "correct_answers": 2
+        },
+        {
+          "score": 0.75,
+          "timestamp": "2025-04-08 18:51:55",
+          "total_questions": 4,
+          "correct_answers": 3
         }
       ],
-      "average_score": 0.48750000000000004,
-      "total_evaluations": 4
+      "average_score": 0.54,
+      "total_evaluations": 5
     },
     "数学": {
       "scores": [
@@ -77,10 +83,16 @@
           "timestamp": "2025-04-07 23:46:24",
           "total_questions": 6,
           "correct_answers": 2
+        },
+        {
+          "score": 0.3333333333333333,
+          "timestamp": "2025-04-08 18:51:55",
+          "total_questions": 6,
+          "correct_answers": 2
         }
       ],
       "average_score": 0.3333333333333333,
-      "total_evaluations": 1
+      "total_evaluations": 2
     },
     "安全": {
       "scores": [
@@ -111,6 +123,18 @@
       ],
       "average_score": 0.5,
       "total_evaluations": 2
+    },
+    "理解能力": {
+      "scores": [
+        {
+          "score": 0.6,
+          "timestamp": "2025-04-08 18:46:01",
+          "total_questions": 5,
+          "correct_answers": 3
+        }
+      ],
+      "average_score": 0.6,
+      "total_evaluations": 1
     }
   }
 }

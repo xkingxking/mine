@@ -1,0 +1,65 @@
+{
+  "model_info": {
+    "name": "deepseek",
+    "evaluation_time": "2025-04-08 18:46:01"
+  },
+  "evaluation_summary": {
+    "overall_score": 0.6,
+    "domain_scores": {
+      "理解能力": {
+        "score": 0.6,
+        "total_questions": 5,
+        "correct_answers": 3
+      }
+    }
+  },
+  "domain_results": {
+    "理解能力": [
+      {
+        "id": "001",
+        "type": "true_false",
+        "difficulty": "简单",
+        "metric": "准确性",
+        "question": "Python中的\"print(3 + 5)\"会输出8。",
+        "standard_answer": "正确",
+        "model_output": ""
+      },
+      {
+        "id": "002",
+        "type": "choice",
+        "difficulty": "中等",
+        "metric": "准确性",
+        "question": "以下关于Python列表的说法，哪一个是正确的？",
+        "standard_answer": "B",
+        "model_output": ""
+      },
+      {
+        "id": "003",
+        "type": "short_answer",
+        "difficulty": "困难",
+        "metric": "准确性",
+        "question": "请解释以下Python代码的功能，并说明其输出结果（假设输入为 `[3, 1, 4, 1, 5, 9]`）：  \n```python  \ndef mystery(lst):  \nreturn sorted(set(lst), key=lambda x: lst.index(x))  \n```",
+        "standard_answer": "该代码的功能是去除列表中的重复元素，并按照元素在原列表中首次出现的顺序排序。对于输入 `[3, 1, 4, 1, 5, 9]`，输出结果为 `[3, 1, 4, 5, 9]`，因为重复的 `1` 被去除且顺序保留原列表首次出现的顺序。",
+        "model_output": ""
+      },
+      {
+        "id": "004",
+        "type": "choice",
+        "difficulty": "简单",
+        "metric": "准确性",
+        "question": "以下哪句英文翻译成中文的意思是“我喜欢苹果”？",
+        "standard_answer": "B",
+        "model_output": ""
+      },
+      {
+        "id": "005",
+        "type": "true_false",
+        "difficulty": "中等",
+        "metric": "准确性",
+        "question": "在Python中，表达式 `3 * 2 ** 2` 的计算结果是12。",
+        "standard_answer": "正确",
+        "model_output": ""
+      }
+    ]
+  }
+}
