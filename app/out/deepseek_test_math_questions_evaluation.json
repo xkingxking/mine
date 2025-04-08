@@ -1,0 +1,65 @@
+{
+  "model_info": {
+    "name": "deepseek",
+    "evaluation_time": "2025-04-07 23:17:20"
+  },
+  "evaluation_summary": {
+    "overall_score": 0.2,
+    "domain_scores": {
+      "数学": {
+        "score": 0.2,
+        "total_questions": 5,
+        "correct_answers": 1
+      }
+    }
+  },
+  "domain_results": {
+    "数学": [
+      {
+        "id": "001",
+        "type": "choice",
+        "difficulty": "困难",
+        "metric": "准确性",
+        "question": "设 A，B 为n阶矩阵， 则 $|-2(\\begin{array}{cc}A^T & O \\\\ O & B^{-1}\\end{array})|$ 等于()",
+        "standard_answer": "B",
+        "model_output": "D"
+      },
+      {
+        "id": "002",
+        "type": "choice",
+        "difficulty": "困难",
+        "metric": "准确性",
+        "question": "设函数 $f(x)=\\frac{1}{e^{\\frac{x}{x-1}}-1}$， 则 ( )",
+        "standard_answer": "D",
+        "model_output": "D"
+      },
+      {
+        "id": "003",
+        "type": "choice",
+        "difficulty": "中等",
+        "metric": "准确性",
+        "question": "设A为n阶方阵， 且 $|A| \\neq 0$， 则（）.",
+        "standard_answer": "D",
+        "model_output": "A"
+      },
+      {
+        "id": "004",
+        "type": "choice",
+        "difficulty": "困难",
+        "metric": "准确性",
+        "question": "微分方程 $y^{\\prime \\prime}+2 y^{\\prime}+2 y=\\mathrm{e}^{-x} \\sin x$ 的特解形式为 ( ).",
+        "standard_answer": "D",
+        "model_output": "B"
+      },
+      {
+        "id": "005",
+        "type": "choice",
+        "difficulty": "中等",
+        "metric": "准确性",
+        "question": "设 $A，B$ 为n阶非零矩阵， 且AB=0$. 则A和B的秩",
+        "standard_answer": "B",
+        "model_output": "C"
+      }
+    ]
+  }
+}

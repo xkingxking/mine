@@ -30,7 +30,9 @@ async def get_model_output(question: str, model_name: str, proxy: str = None) ->
     """
     try:
         print(f"\n=== 开始获取模型输出 ===")
-        print(f"问题: {question[:100]}...")
+        # 从字典中获取问题内容
+        question_content = question["question"]
+        print(f"问题: {question_content[:100]}{'...' if len(question_content) > 100 else ''}")
         print(f"模型类型: {model_name}")
         
         # 获取API密钥和实际模型名称
@@ -44,16 +46,24 @@ async def get_model_output(question: str, model_name: str, proxy: str = None) ->
         
         # 构建提示词
         prompt_builder = PromptBuilder()
-        # 添加必要的字段
+        # 使用实际的题目数据
         question_data = {
-            "question": question,
-            "type": "default",  # 默认类型
-            "answer": "",  # 空答案
-            "题目领域": "通用",  # 默认领域
-            "难度级别": "中等",  # 默认难度
-            "测试指标": "通用能力"  # 默认指标
+            "question": question["question"],
+            "type": question.get("type", "default"),
+            "answer": question.get("answer", ""),
+            "题目领域": question.get("题目领域", "通用"),
+            "难度级别": question.get("难度级别", "中等"),
+            "测试指标": question.get("测试指标", "通用能力")
         }
         prompt = prompt_builder.build_prompt(question_data)
+        
+        # 打印完整的prompt
+        print("\n=== 发送给模型的Prompt ===")
+        print("系统提示词:")
+        print(prompt["system"])
+        print("\n用户提示词:")
+        print(prompt["user"])
+        print("=== Prompt结束 ===\n")
         
         # 创建模型客户端
         async with ModelClient(model_name, api_key=api_key, model_name=actual_model_name, proxy=proxy) as client:
@@ -77,12 +87,15 @@ async def process_questions(questions: List[Dict[str, Any]], args: argparse.Name
         evaluation_manager = EvaluationManager()
         report_generator = ReportGenerator(args.output if args.output else settings.OUTPUT_DIR)
         
+        # 从问题文件路径中提取数据集名称
+        dataset_name = Path(args.questions).stem
+        
         # 处理每个问题
         for question in questions:
             try:
                 # 获取模型输出
                 model_output = await get_model_output(
-                    question["question"],
+                    question,
                     args.model,
                     args.proxy
                 )
@@ -94,7 +107,8 @@ async def process_questions(questions: List[Dict[str, Any]], args: argparse.Name
                 evaluation_results = await evaluation_manager.evaluate_response(
                     model_output=model_output,
                     standard_answer=question["answer"],
-                    domain=question.get("题目领域", "通用")
+                    domain=question.get("题目领域", "通用"),
+                    question_type=question.get("type", "choice")
                 )
                 
                 # 打印评估结果
@@ -123,7 +137,7 @@ async def process_questions(questions: List[Dict[str, Any]], args: argparse.Name
         )
         
         # 保存报告
-        report_path = report_generator.save_report(report, args.model)
+        report_path = report_generator.save_report(report, args.model, dataset_name)
         print(f"\n报告已保存到: {report_path}")
         
     except Exception as e:

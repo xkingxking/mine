@@ -1,7 +1,7 @@
 {
   "model_info": {
     "name": "deepseek",
-    "last_update": "2025-04-07 20:18:25"
+    "last_update": "2025-04-08 17:20:27"
   },
   "domains": {
     "法学": {
@@ -11,10 +11,28 @@
           "timestamp": "20250407_201657",
           "total_questions": 5,
           "correct_answers": 3
+        },
+        {
+          "score": 0.75,
+          "timestamp": "2025-04-07 23:46:24",
+          "total_questions": 4,
+          "correct_answers": 3
+        },
+        {
+          "score": 0.2,
+          "timestamp": "2025-04-08 16:48:11",
+          "total_questions": 5,
+          "correct_answers": 1
+        },
+        {
+          "score": 0.4,
+          "timestamp": "2025-04-08 17:20:27",
+          "total_questions": 5,
+          "correct_answers": 2
         }
       ],
-      "average_score": 0.6,
-      "total_evaluations": 1
+      "average_score": 0.48750000000000004,
+      "total_evaluations": 4
     },
     "数学": {
       "scores": [
@@ -23,10 +41,76 @@
           "timestamp": "20250407_201825",
           "total_questions": 5,
           "correct_answers": 0
+        },
+        {
+          "score": 0.0,
+          "timestamp": "20250407_215054",
+          "total_questions": 5,
+          "correct_answers": 0
+        },
+        {
+          "score": 0.0,
+          "timestamp": "20250407_230033",
+          "total_questions": 5,
+          "correct_answers": 0
+        },
+        {
+          "score": 0.0,
+          "timestamp": "20250407_230243",
+          "total_questions": 5,
+          "correct_answers": 0
+        },
+        {
+          "score": 0.2,
+          "timestamp": "2025-04-07 23:17:20",
+          "total_questions": 5,
+          "correct_answers": 1
         }
       ],
-      "average_score": 0.0,
+      "average_score": 0.04,
+      "total_evaluations": 5
+    },
+    "医学": {
+      "scores": [
+        {
+          "score": 0.3333333333333333,
+          "timestamp": "2025-04-07 23:46:24",
+          "total_questions": 6,
+          "correct_answers": 2
+        }
+      ],
+      "average_score": 0.3333333333333333,
       "total_evaluations": 1
+    },
+    "安全": {
+      "scores": [
+        {
+          "score": 0.8,
+          "timestamp": "2025-04-08 00:43:08",
+          "total_questions": 5,
+          "correct_answers": 4
+        }
+      ],
+      "average_score": 0.8,
+      "total_evaluations": 1
+    },
+    "学科综合能力": {
+      "scores": [
+        {
+          "score": 0.6,
+          "timestamp": "2025-04-08 16:36:38",
+          "total_questions": 5,
+          "correct_answers": 3
+        },
+        {
+          "score": 0.4,
+          "timestamp": "2025-04-08 16:36:42",
+          "total_questions": 5,
+          "correct_answers": 2
+        }
+      ],
+      "average_score": 0.5,
+      "total_evaluations": 2
     }
   }
 }

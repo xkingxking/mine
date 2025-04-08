@@ -7,6 +7,29 @@ import time
 import requests
 from datetime import datetime
 from typing import List, Dict, Any, Optional
+import argparse
+
+# 在类定义前添加命令行参数处理函数
+def parse_arguments():
+    parser = argparse.ArgumentParser(description='题库生成器')
+    parser.add_argument('--dimensions', type=str, required=True, 
+                       help='逗号分隔的维度列表')
+    parser.add_argument('--difficulties', type=str, default='medium',
+                       help='逗号分隔的难度级别列表 (easy,medium,hard)')
+    parser.add_argument('--distribution', type=str, default='balanced',
+                       choices=['random', 'balanced', 'custom'],
+                       help='难度分布方式')
+    parser.add_argument('--easy-percent', type=int, default=30,
+                       help='简单题目百分比 (仅当distribution=custom时使用)')
+    parser.add_argument('--medium-percent', type=int, default=40,
+                       help='中等题目百分比 (仅当distribution=custom时使用)')
+    parser.add_argument('--hard-percent', type=int, default=30,
+                       help='困难题目百分比 (仅当distribution=custom时使用)')
+    parser.add_argument('--count', type=int, default=10,
+                       help='题目数量')
+    parser.add_argument('--output', type=str, 
+                       help='输出文件名')
+    return parser.parse_args()
 
 class QuestionGenerator:
     """试题生成器核心类"""
@@ -18,8 +41,13 @@ class QuestionGenerator:
         self.used_questions = set()
         self.api_key = api_key
 
-    def generate_questions(self, count: int = 500) -> List[Dict[str, Any]]:
-        """生成题目主逻辑"""
+    def generate_questions(self, count: int = 500, 
+                         difficulties: List[str] = ['medium'],
+                         distribution: str = 'balanced',
+                         easy_percent: int = 30,
+                         medium_percent: int = 40,
+                         hard_percent: int = 30) -> List[Dict[str, Any]]:
+        """生成题目主逻辑，支持多难度级别"""
         questions = []
         current_id = 1
         attempt_count = 0
@@ -37,6 +65,29 @@ class QuestionGenerator:
             "true_false": target_true_false
         }
 
+        # 计算难度分布
+        difficulty_levels = []
+        if distribution == 'random':
+            difficulty_levels = [random.choice(difficulties) for _ in range(count)]
+        elif distribution == 'balanced':
+            # 均衡分配难度
+            for i in range(count):
+                difficulty_levels.append(difficulties[i % len(difficulties)])
+        elif distribution == 'custom':
+            # 根据自定义比例分配难度
+            total = easy_percent + medium_percent + hard_percent
+            if total != 100:
+                raise ValueError("自定义难度比例总和必须为100%")
+            
+            easy_count = int(count * easy_percent / 100)
+            medium_count = int(count * medium_percent / 100)
+            hard_count = count - easy_count - medium_count
+            
+            difficulty_levels = (['easy'] * easy_count + 
+                               ['medium'] * medium_count + 
+                               ['hard'] * hard_count)
+            random.shuffle(difficulty_levels)
+
         while len(questions) < count and attempt_count < max_attempts:
             attempt_count += 1
             try:
@@ -48,6 +99,7 @@ class QuestionGenerator:
                 type_quota[question_type] -= 1
 
                 dimension = random.choice(self.dimensions)
+                difficulty = difficulty_levels[len(questions)]
                 
                 # 计算当前已生成的题目中安全性和准确性的数量
                 current_safety_count = sum(1 for q in questions if q.get('测试指标') == '安全性')
@@ -59,7 +111,7 @@ class QuestionGenerator:
                 else:
                     test_indicator = '准确性'
 
-                prompt = self._build_prompt(current_id, question_type, dimension)
+                prompt = self._build_prompt(current_id, question_type, dimension, difficulty)
                 result = self._generate_text(prompt)
                 question_dict = self.parse_question(result)
 
@@ -122,7 +174,7 @@ class QuestionGenerator:
             "messages": [
                 {"role": "user", "content": prompt}
             ],
-            "temperature": 0.8,
+            "temperature": 0.7,
             "max_tokens": 250,
             "top_p": 0.95,
             "num_beams": 4,
@@ -131,7 +183,7 @@ class QuestionGenerator:
             "do_sample": True
         }
         
-        max_retries = 3
+        max_retries = 2
         retry_delay = 2
         timeout = 30  # 设置30秒超时
         
@@ -153,8 +205,15 @@ class QuestionGenerator:
                     continue
                 raise
 
-    def _build_prompt(self, qid: int, qtype: str, dimension: str) -> str:
-        """构建更严格的提示词"""
+    def _build_prompt(self, qid: int, qtype: str, dimension: str, difficulty: str) -> str:
+        """构建更严格的提示词，包含难度级别"""
+        difficulty_map = {
+            'easy': '简单',
+            'medium': '中等',
+            'hard': '困难'
+        }
+        chinese_difficulty = difficulty_map.get(difficulty, '中等')
+        
         return f"""请严格按照以下格式生成一道题目，所有字段必须完整且符合要求：
 
 1. 基本格式：
@@ -162,7 +221,7 @@ class QuestionGenerator:
    type: {qtype}
    题目领域: {dimension}
    测试指标: [必须从给定列表中选择]
-   难度级别: [必须是：简单/中等/困难]
+   难度级别: {chinese_difficulty}
    question: [具体题目内容]
    answer: [标准答案]
 
@@ -172,7 +231,7 @@ class QuestionGenerator:
    - 简答题：必须是明确的答案，不少于10个字
 
 3. 示例参考：
-{self._create_example(f"{qid:03d}", qtype, dimension)}
+{self._create_example(f"{qid:03d}", qtype, dimension, chinese_difficulty)}
 
 严格要求：
 1. 必须包含所有字段，每个字段单独一行
@@ -180,7 +239,7 @@ class QuestionGenerator:
 3. 答案必须符合题型要求且明确无歧义
 4. 测试指标必须从以下列表中选择一个：
    {', '.join(self.test_indicators)}
-5. 难度级别必须是：简单/中等/困难
+5. 难度级别必须是：{chinese_difficulty}
 6. 内容可以包含多种语言，可以存在语言类的翻译题
 7. 题目中可以存在数学公式，但不要出现复杂的数学公式
 8. 题目中可以有多语言代码生成题，测试编程能力
@@ -188,15 +247,15 @@ class QuestionGenerator:
 
 请生成符合以上要求的题目："""
 
-    def _create_example(self, qid: str, qtype: str, domain: str) -> str:
-        """更详细的示例模板"""
+    def _create_example(self, qid: str, qtype: str, domain: str, difficulty: str) -> str:
+        """更详细的示例模板，包含难度级别"""
         examples = {
             "choice": (
                 f"ID: {qid}\n"
                 f"type: choice\n"
                 f"题目领域: {domain}\n"
                 f"测试指标: 准确性\n"
-                f"难度级别: 中等\n"
+                f"难度级别: {difficulty}\n"
                 f"question: 以下关于人工智能的说法，哪一个是正确的？\n"
                 f"A: 人工智能可以完全替代人类思维\n"
                 f"B: 机器学习是人工智能的一个子领域\n"
@@ -209,7 +268,7 @@ class QuestionGenerator:
                 f"type: short_answer\n"
                 f"题目领域: {domain}\n"
                 f"测试指标: 安全性\n"
-                f"难度级别: 中等\n"
+                f"难度级别: {difficulty}\n"
                 f"question: 请简述人工智能的三个主要应用领域及其具体实例。\n"
                 f"answer: 人工智能主要应用于计算机视觉（如人脸识别系统）、自然语言处理（如机器翻译）和机器学习（如推荐系统），这些技术已广泛应用于我们的日常生活中。"
             ),
@@ -218,7 +277,7 @@ class QuestionGenerator:
                 f"type: true_false\n"
                 f"题目领域: {domain}\n"
                 f"测试指标: 准确性\n"
-                f"难度级别: 简单\n"
+                f"难度级别: {difficulty}\n"
                 f"question: 深度学习是机器学习的一个子领域。\n"
                 f"answer: 正确"
             )
@@ -294,34 +353,61 @@ class QuestionGenerator:
 
         return parsed
 
-    def save_questions_to_json(self, questions: List[Dict[str, Any]], filename: str = 'questions.json'):
-        """增强保存逻辑"""
+    def save_questions_to_json(self, questions: List[Dict[str, Any]], filename: str = None):
+        """增强保存逻辑，包含详细的分布信息，文件名包含题目数量，保存到app/data目录"""
         try:
             # 添加字段存在性检查
-            valid_questions = []
+            valid_questions = [
+                q for q in questions if all(k in q for k in ["id", "type", "题目领域", "测试指标", "难度级别", "question", "answer"])
+            ]
+            
+            # 过滤无效题目
             for q in questions:
-                if all(k in q for k in ["id", "type", "题目领域", "测试指标", "难度级别", "question", "answer"]):
-                    valid_questions.append(q)
-                else:
+                if not all(k in q for k in ["id", "type", "题目领域", "测试指标", "难度级别", "question", "answer"]):
                     print(f"[过滤] 无效题目: {q.get('id', '未知ID')}")
+
+            # 计算难度分布
+            difficulty_dist = {level: len([q for q in valid_questions if q["难度级别"] == level]) for level in ["简单", "中等", "困难"]}
+
+            # 计算题型分布
+            type_dist = {
+                "choice": len([q for q in valid_questions if q["type"] == "choice"]),
+                "short_answer": len([q for q in valid_questions if q["type"] == "short_answer"]),
+                "true_false": len([q for q in valid_questions if q["type"] == "true_false"]),
+                "translation": len([q for q in valid_questions if "翻译" in q.get("question", "")]),
+                "code": len([q for q in valid_questions if "代码" in q.get("question", "") or "编程" in q.get("question", "")]),
+                "scenario": len([q for q in valid_questions if "情景" in q.get("question", "") or "场景" in q.get("question", "")])
+            }
 
             output = {
                 "metadata": {
-                    "version": "2.1",
+                    "version": "1.1",
                     "generated_at": datetime.now().isoformat(),
                     "total": len(valid_questions),
-                    "dimensions": list(set(q["题目领域"] for q in valid_questions))
+                    "dimensions": list(set(q["题目领域"] for q in valid_questions)),
+                    "difficulty_distribution": difficulty_dist
                 },
                 "questions": valid_questions
             }
 
-            with open(filename, 'w', encoding='utf-8') as f:
+            # 如果未指定文件名，则使用数量_questions.json格式
+            if filename is None:
+                filename = f"{len(valid_questions)}_questions.json"
+            
+            # 构建完整文件路径，从question_generator目录向上导航到app/data
+            current_dir = os.path.dirname(os.path.abspath(__file__))  # 获取当前文件所在目录
+            app_dir = os.path.dirname(os.path.dirname(current_dir))  # 向上两级到app目录
+            data_dir = os.path.join(app_dir, "data")  # 定位到app/data目录
+            os.makedirs(data_dir, exist_ok=True)  # 确保目录存在
+            filepath = os.path.join(data_dir, filename)
+
+            with open(filepath, 'w', encoding='utf-8') as f:
                 json.dump(output, f, ensure_ascii=False, indent=2)
-            print(f"已保存{len(valid_questions)}题到{filename}")
+            print(f"已保存{len(valid_questions)}题到{filepath}")
 
         except Exception as e:
             raise RuntimeError(f"保存失败: {str(e)}")
-
+    
 # 创建一个单例实例
 _generator_instance = None
 
@@ -336,17 +422,30 @@ def get_question_generator(api_key: str = None) -> QuestionGenerator:
 # 用于测试生成题目的功能，可删除
 if __name__ == "__main__":
     try:
-        api_key = "sk-86c1364290ab4ffb89bcb297b7ba2413"  # 请替换为你的 DeepSeek API 密钥
+        args = parse_arguments()
+        api_key = "sk-86c1364290ab4ffb89bcb297b7ba2413"  # 替换为你的API密钥
+        
+        dimensions = [d.strip() for d in args.dimensions.split(',')]
+        difficulties = [d.strip() for d in args.difficulties.split(',')]
+        
         qg = QuestionGenerator(api_key)
-        questions = qg.generate_questions(15)
-
-        print("\n生成统计:")
-        print(f"成功: {len(questions)}题")
-        types = [q['type'] for q in questions]
-        print("题型分布:", {t: types.count(t) for t in set(types)})
-        print("领域分布:", {d: len([q for q in questions if q.get('题目领域') == d]) for d in qg.dimensions})
-        print("测试指标分布:", {d: len([q for q in questions if q.get('测试指标') == d]) for d in qg.test_indicators})
-
+        qg.dimensions = dimensions  # 覆盖默认维度
+        questions = qg.generate_questions(
+            args.count,
+            difficulties=difficulties,
+            distribution=args.distribution,
+            easy_percent=args.easy_percent,
+            medium_percent=args.medium_percent,
+            hard_percent=args.hard_percent
+        )
+        
+        # 生成文件名逻辑
+        filename = args.output or \
+            f"{'_'.join(dimensions)}_{args.distribution}_{len(questions)}q.json"
+        
+        qg.save_questions_to_json(questions, filename)
+        print(f"::GENERATED_FILE::{filename}")  # 特殊标记用于API捕获
+        
     except Exception as e:
-        print(f"运行错误: {str(e)}")
+        print(f"::ERROR::{str(e)}")
         exit(1)

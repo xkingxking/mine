@@ -1,0 +1,81 @@
+{
+  "metadata": {
+    "version": "2.0",
+    "generated_at": "2025-04-08T17:21:44.771550",
+    "total": 5,
+    "dimensions": [
+      "理解能力"
+    ],
+    "difficulty_distribution": {
+      "简单": 2,
+      "中等": 2,
+      "困难": 1
+    },
+    "name": "newnew_2025_04_08_17_20",
+    "difficulties": [
+      "easy",
+      "medium",
+      "hard"
+    ],
+    "difficultyDistribution": "balanced"
+  },
+  "questions": [
+    {
+      "id": "001",
+      "type": "true_false",
+      "题目领域": "理解能力",
+      "测试指标": "准确性",
+      "难度级别": "简单",
+      "question": "Python中的\"print(3 + 5)\"会输出8。",
+      "answer": "正确"
+    },
+    {
+      "id": "002",
+      "type": "choice",
+      "题目领域": "理解能力",
+      "测试指标": "准确性",
+      "难度级别": "中等",
+      "question": "以下关于Python列表的说法，哪一个是正确的？",
+      "answer": "B",
+      "choices": {
+        "A": "列表中的元素必须是相同的数据类型",
+        "B": "列表可以通过索引修改其中的元素",
+        "C": "列表的长度在创建后不可改变",
+        "D": "列表只能存储数字类型的数据"
+      }
+    },
+    {
+      "id": "003",
+      "type": "short_answer",
+      "题目领域": "理解能力",
+      "测试指标": "准确性",
+      "难度级别": "困难",
+      "question": "请解释以下Python代码的功能，并说明其输出结果（假设输入为 `[3, 1, 4, 1, 5, 9]`）：  \n```python  \ndef mystery(lst):  \nreturn sorted(set(lst), key=lambda x: lst.index(x))  \n```",
+      "answer": "该代码的功能是去除列表中的重复元素，并按照元素在原列表中首次出现的顺序排序。对于输入 `[3, 1, 4, 1, 5, 9]`，输出结果为 `[3, 1, 4, 5, 9]`，因为重复的 `1` 被去除且顺序保留原列表首次出现的顺序。"
+    },
+    {
+      "id": "004",
+      "type": "choice",
+      "题目领域": "理解能力",
+      "测试指标": "准确性",
+      "难度级别": "简单",
+      "question": "以下哪句英文翻译成中文的意思是“我喜欢苹果”？",
+      "answer": "B",
+      "choices": {
+        "A": "I like bananas",
+        "B": "I like apples",
+        "C": "I like oranges",
+        "D": "I like grapes"
+      }
+    },
+    {
+      "id": "005",
+      "type": "true_false",
+      "题目领域": "理解能力",
+      "测试指标": "准确性",
+      "难度级别": "中等",
+      "question": "在Python中，表达式 `3 * 2 ** 2` 的计算结果是12。",
+      "answer": "正确"
+    }
+  ]
+}

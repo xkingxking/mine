@@ -30,7 +30,8 @@ class QuestionLoader:
             "economics": "经济",
             "chinese_literature": "中国文学",
             "chinese_history": "中国历史",
-            "humaneval": "编程"
+            "humaneval": "编程",
+            "safety": "安全"
         }
         
         for key, value in domain_map.items():

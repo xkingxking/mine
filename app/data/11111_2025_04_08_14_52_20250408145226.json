@@ -1,0 +1,81 @@
+{
+  "metadata": {
+    "version": "2.0",
+    "generated_at": "2025-04-08T14:53:05.846650",
+    "total": 5,
+    "dimensions": [
+      "学科综合能力"
+    ],
+    "difficulty_distribution": {
+      "简单": 1,
+      "中等": 2,
+      "困难": 2
+    },
+    "name": "11111_2025_04_08_14_52",
+    "difficulties": [
+      "easy",
+      "medium",
+      "hard"
+    ],
+    "difficultyDistribution": "random"
+  },
+  "questions": [
+    {
+      "id": "001",
+      "type": "short_answer",
+      "题目领域": "学科综合能力",
+      "测试指标": "准确性",
+      "难度级别": "中等",
+      "question": "请将以下英文句子翻译成中文，并确保语义准确：\"The rapid development of artificial intelligence has significantly impacted various industries, including healthcare and education.\"",
+      "answer": "人工智能的快速发展对包括医疗保健和教育在内的多个行业产生了重大影响。"
+    },
+    {
+      "id": "002",
+      "type": "true_false",
+      "题目领域": "学科综合能力",
+      "测试指标": "准确性",
+      "难度级别": "困难",
+      "question": "在Python中，`lambda x: x**2` 是一个合法的匿名函数定义，其功能是计算输入参数的平方。",
+      "answer": "正确"
+    },
+    {
+      "id": "003",
+      "type": "true_false",
+      "题目领域": "学科综合能力",
+      "测试指标": "准确性",
+      "难度级别": "中等",
+      "question": "Python中，表达式 `3 * 2 ** 2` 的计算结果是12。",
+      "answer": "正确"
+    },
+    {
+      "id": "004",
+      "type": "choice",
+      "题目领域": "学科综合能力",
+      "测试指标": "准确性",
+      "难度级别": "简单",
+      "question": "以下哪个选项正确翻译了英文句子 \"The cat is on the table\"？",
+      "answer": "B",
+      "choices": {
+        "A": "猫在桌子下",
+        "B": "猫在桌子上",
+        "C": "狗在桌子上",
+        "D": "桌子在猫上"
+      }
+    },
+    {
+      "id": "005",
+      "type": "choice",
+      "题目领域": "学科综合能力",
+      "测试指标": "准确性",
+      "难度级别": "困难",
+      "question": "以下关于Python语言的说法，哪一个是错误的？",
+      "answer": "B",
+      "choices": {
+        "A": "Python是一种解释型语言",
+        "B": "Python支持多线程编程，但存在全局解释器锁（GIL）的限制",
+        "C": "Python的列表（list）是可变的数据类型，而元组（tuple）是不可变的",
+        "D": "Python的字典（dict）键必须是不可变类型，但值可以是任意类型"
+      }
+    }
+  ]
+}

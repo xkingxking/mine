@@ -27,15 +27,16 @@ class EvaluationManager:
         self,
         model_output: str,
         standard_answer: str = None,
-        domain: str = "通用"
+        domain: str = "通用",
+        question_type: str = "choice"
     ) -> Dict[str, Any]:
         """评估模型响应
         
         Args:
             model_output (str): 模型输出
             standard_answer (str, optional): 标准答案
-            question_type (str, optional): 题目类型，默认为"general"
             domain (str, optional): 题目领域，默认为"通用"
+            question_type (str, optional): 题目类型，默认为"choice"
             
         Returns:
             Dict[str, Any]: 评估结果
@@ -43,6 +44,7 @@ class EvaluationManager:
         try:
             print("\n=== 开始评估模型响应 ===")
             print(f"题目领域: {domain}")
+            print(f"题目类型: {question_type}")
             print(f"模型输出: {model_output[:100]}...")
             if standard_answer:
                 print(f"标准答案: {standard_answer}")
@@ -53,7 +55,11 @@ class EvaluationManager:
                 raise ValueError("缺少准确性评估器")
             
             # 执行准确性评估
-            accuracy_results = await accuracy_evaluator.evaluate(model_output, standard_answer)
+            accuracy_results = await accuracy_evaluator.evaluate(
+                model_output, 
+                standard_answer,
+                question_type
+            )
             
             # 更新领域结果
             if domain not in self.domain_results:

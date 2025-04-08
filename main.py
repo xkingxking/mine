@@ -1,26 +1,13 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from flask import Flask
+from flask_cors import CORS
 from app.core.config import settings
-from app.api.v1.api import api_router
 
-app = FastAPI(
-    title=settings.PROJECT_NAME,
-    version=settings.VERSION,
-    description=settings.DESCRIPTION,
-)
+app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
-# 配置CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# 注册路由
-app.include_router(api_router, prefix="/api/v1")
+# 导入并注册 API 路由
+from app.api.api import app as api_app
+app.register_blueprint(api_app)
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000) 
+    app.run(host="0.0.0.0", port=5000, debug=True) 

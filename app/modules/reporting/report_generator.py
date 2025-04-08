@@ -39,7 +39,7 @@ class ReportGenerator:
         report = {
             "model_info": {
                 "name": model_name,
-                "evaluation_time": current_time
+                "evaluation_time": current_time,
             },
             "evaluation_summary": {
                 "overall_score": evaluation_summary["overall_score"],
@@ -62,31 +62,26 @@ class ReportGenerator:
                 "question": question["question"],
                 "standard_answer": question["answer"],
                 "model_output": question.get("model_output", "")  # 添加模型输出字段
+ # 添加评估结果字段
             }
             report["domain_results"][domain].append(question_result)
         
         return report
     
-    def save_report(self, report: Dict[str, Any], model_name: str) -> Path:
+    def save_report(self, report: Dict[str, Any], model_name: str, dataset_name: str) -> Path:
         """
         保存报告到文件
         
         Args:
             report (Dict[str, Any]): 要保存的报告
             model_name (str): 模型名称
+            dataset_name (str): 数据集名称
             
         Returns:
             Path: 保存的文件路径
         """
-        # 从报告中获取数据集名称
-        dataset_name = "unknown"
-        if "domain_results" in report and report["domain_results"]:
-            # 获取第一个领域的名称作为数据集名称
-            dataset_name = list(report["domain_results"].keys())[0]
-        
         # 生成文件名
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"{model_name}_{dataset_name}_evaluation_{timestamp}.json"
+        filename = f"{model_name}_{dataset_name}_evaluation.json"
         output_file = self.output_dir / filename
         
         # 保存报告
@@ -121,7 +116,7 @@ class ReportGenerator:
             # 添加新的得分
             domains_data["domains"][domain]["scores"].append({
                 "score": score_info["score"],
-                "timestamp": timestamp,
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "total_questions": score_info["total_questions"],
                 "correct_answers": score_info["correct_answers"]
             })
