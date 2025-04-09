@@ -40,7 +40,7 @@ app/.venv/pyvenv.cfg
 *.swo
 
 # Environment variables
-# .env
+.env
 
 # Logs
 logs/
@@ -68,4 +68,7 @@ frontend/.env.production.local
 frontend/npm-debug.log*
 frontend/yarn-debug.log*
 frontend/yarn-error.log*
-frontend/package-lock.json 
+frontend/package-lock.json
+
+# Output directory - keep the directory but ignore its contents
+app/out/*
