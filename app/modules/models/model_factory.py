@@ -1,5 +1,9 @@
 from typing import Dict, Type, Optional
 from .base_model import BaseModel
+from .chatgpt_model import ChatGPTModel
+from .deepseek_model import DeepseekModel
+from .doubao_model import DoubaoModel
+from .qwen_model import QwenModel
 
 class ModelFactory:
     """模型工厂类，用于创建和管理不同的模型实例"""
@@ -68,4 +72,6 @@ class ModelFactory:
         Returns:
             bool: 模型类型是否可用
         """
-        return model_type in cls._models 
+        return model_type in cls._models
+
+
