@@ -37,27 +37,27 @@ async def get_model_output(question: str, model_name: str, proxy: str = None) ->
         
         # 根据模型类型获取对应的配置
         model_config = {
-            "openai": {
+            "gpt-4": {
                 "api_key": os.getenv('OPENAI_API_KEY'),
                 "model_name": os.getenv('OPENAI_MODEL_NAME', 'gpt-4-turbo-preview'),
                 "api_base": os.getenv('OPENAI_API_BASE', 'https://api.openai.com/v1')
             },
             "deepseek-v3": {
                 "api_key": os.getenv('DEEPSEEK_API_KEY'),
-                "model_name": 'deepseek-chat',
+                "model_name": os.getenv('DEEPSEEK_MODEL_NAME', 'doubao-1.5-pro-32k-250115'),
                 "api_base": os.getenv('DEEPSEEK_API_BASE', 'https://api.deepseek.com/v1')
             },
-            "doubao": {
+            "doubao-1.5-pro-32k": {
                 "api_key": os.getenv('DOUBAO_API_KEY'),
                 "model_name": os.getenv('DOUBAO_MODEL_NAME', 'doubao-1.5-pro-32k-250115'),
                 "api_base": os.getenv('DOUBAO_API_BASE', 'https://api.doubao.com/v1')
             },
-            "qwen": {
+            "qwen-max": {
                 "api_key": os.getenv('QWEN_API_KEY'),
                 "model_name": os.getenv('QWEN_MODEL_NAME', 'qwen-max'),
                 "api_base": os.getenv('QWEN_API_BASE', 'https://dashscope.aliyuncs.com/compatible-mode/v1')
             },
-            "llama": {
+            "llama-2": {
                 "api_key": os.getenv('LLAMA_API_KEY'),
                 "model_name": os.getenv('LLAMA_MODEL_NAME', 'llama3.3-70b-instruct'),
                 "api_base": os.getenv('LLAMA_API_BASE', 'https://api.llama.com/v1')
