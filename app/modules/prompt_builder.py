@@ -56,13 +56,13 @@ class PromptBuilder:
         
     
     def build_prompt(self, 
-                    question: Dict[str, Any],
+                    question_data: Dict[str, Any],
                     system_prompt: Optional[str] = None) -> Dict[str, str]:
         """
         构建提示词
         
         Args:
-            question (Dict[str, Any]): 题目信息
+            question_data (Dict[str, Any]): 题目信息
             system_prompt (Optional[str]): 自定义系统提示词
             
         Returns:
@@ -73,26 +73,29 @@ class PromptBuilder:
             system = system_prompt
         else:
             system = self.system_prompts.get(
-                question["type"],
+                question_data["type"],
                 self.system_prompts["default"]
             )
         
         # 构建用户提示词
         user = f"""
         请回答以下题目：
-        题目：{question['question']}
-        类型：{question['type']}
-        领域：{question.get('题目领域', '未知')}
-        难度：{question.get('难度级别', '未知')}
-        测试指标：{question.get('测试指标', '未知')}
+        题目：{question_data['question']}
+        类型：{question_data['type']}
+        领域：{question_data.get('题目领域', '未知')}
+        难度：{question_data.get('难度级别', '未知')}
+        测试指标：{question_data.get('测试指标', '未知')}
         """
         
-        if "choices" in question:
-            choices_str = "\n".join([f"{k}. {v}" for k, v in question['choices'].items()])
-            user += f"\n选项：\n{choices_str}"
+        # 处理选择题选项
+        if question_data['type'] == 'choice' and 'choices' in question_data:
+            choices = question_data['choices']
+            if isinstance(choices, dict):
+                choices_str = "\n".join([f"{k}. {v}" for k, v in choices.items()])
+                user += f"\n选项：\n{choices_str}\n"
         
         # 根据题型添加特定指令
-        user += self._get_type_specific_instruction(question["type"])
+        user += self._get_type_specific_instruction(question_data["type"])
         
         return {
             "system": system,
@@ -111,7 +114,7 @@ class PromptBuilder:
         """
         instructions = {
             "choice": "\n请从选项中选择一个正确答案",
-            "short_answer": "\n请提供详细答案和解题思路（如需演示，请用文字描述）。",
+            "short_answer": "\n请提供答案。",
             "true_false": "\n请回答'正确'或'错误'",
             "code": "\n请提供完整的代码实现，并说明关键步骤。",
             "translation": "\n请提供准确的翻译结果，并说明翻译要点。",

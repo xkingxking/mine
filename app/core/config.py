@@ -14,37 +14,47 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     
     # 安全配置
-    SECRET_KEY: str = "your-secret-key-here"
+    SECRET_KEY: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 11520
     
     # 数据库配置
-    DATABASE_URL: str = "postgresql://user:password@localhost/dbname"
+    DATABASE_URL: str
     
     # 模型配置
-    SUPPORTED_MODELS: List[str] = ["gpt-3.5-turbo", "gpt-4", "claude-2", "llama-2", "chatglm3"]
-    
-    # 题库配置
+    SUPPORTED_MODELS: List[str]
     MIN_QUESTIONS: int = 500
     VALIDATION_THRESHOLD: float = 0.9
     
     # Redis配置
-    REDIS_URL: str = "redis://localhost:6379/0"
+    REDIS_URL: str
     
-    # API密钥配置
-    DEEPSEEK_API_KEY: str = ""
-    OPENAI_API_KEY: str = ""
-    GEMINI_API_KEY: str = ""
-    PERSPECTIVE_API_KEY: str = ""
+    # API Keys
+    PERSPECTIVE_API_KEY: str
+    DEEPSEEK_API_KEY: str
+    OPENAI_API_KEY: str
+    GEMINI_API_KEY: str
+    DOUBAO_API_KEY: str
+    QWEN_API_KEY: str
+    LLAMA_API_KEY: str
+
     
-    # 模型配置
+    # 模型名称
     DEEPSEEK_MODEL_NAME: str = "deepseek-chat"
     OPENAI_MODEL_NAME: str = "gpt-4"
     GEMINI_MODEL_NAME: str = "gemini-pro"
+    DOUBAO_MODEL_NAME: str = "doubao-1.5-pro-32k-250115"
+    QWEN_MODEL_NAME: str = "qwen-max"
+    LLAMA_MODEL_NAME: str = "llama3.3-70b-instruct"
+
     
     # API基础URL
     DEEPSEEK_API_BASE: str = "https://api.deepseek.com/v1"
     OPENAI_API_BASE: str = "https://api.openai.com/v1"
     GEMINI_API_BASE: str = "https://generativelanguage.googleapis.com/v1"
+    DOUBAO_API_BASE: str = "https://ark.cn-beijing.volces.com/api/v3"
+    QWEN_API_BASE: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    LLAMA_API_BASE: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+
     
     # 日志配置
     LOG_LEVEL: str = "INFO"

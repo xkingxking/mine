@@ -22,7 +22,7 @@ async def get_model_output(question: str, model_name: str, proxy: str = None) ->
     
     Args:
         question (str): 问题内容
-        model_name (str): 模型类型（如 'deepseek'）
+        model_name (str): 模型类型（如 'deepseek', 'chatgpt'）
         proxy (str, optional): 代理服务器地址
         
     Returns:
@@ -35,14 +35,43 @@ async def get_model_output(question: str, model_name: str, proxy: str = None) ->
         print(f"问题: {question_content[:100]}{'...' if len(question_content) > 100 else ''}")
         print(f"模型类型: {model_name}")
         
-        # 获取API密钥和实际模型名称
-        api_key = os.getenv('DEEPSEEK_API_KEY')
-        actual_model_name = os.getenv('DEEPSEEK_MODEL_NAME', 'deepseek-chat')
+        # 根据模型类型获取对应的配置
+        model_config = {
+            "openai": {
+                "api_key": os.getenv('OPENAI_API_KEY'),
+                "model_name": os.getenv('OPENAI_MODEL_NAME', 'gpt-4-turbo-preview'),
+                "api_base": os.getenv('OPENAI_API_BASE', 'https://api.openai.com/v1')
+            },
+            "deepseek": {
+                "api_key": os.getenv('DEEPSEEK_API_KEY'),
+                "model_name": os.getenv('DEEPSEEK_MODEL_NAME', 'deepseek-chat'),
+                "api_base": os.getenv('DEEPSEEK_API_BASE', 'https://api.deepseek.com/v1')
+            },
+            "doubao": {
+                "api_key": os.getenv('DOUBAO_API_KEY'),
+                "model_name": os.getenv('DOUBAO_MODEL_NAME', 'doubao-1.5-pro-32k-250115'),
+                "api_base": os.getenv('DOUBAO_API_BASE', 'https://api.doubao.com/v1')
+            },
+            "qwen": {
+                "api_key": os.getenv('QWEN_API_KEY'),
+                "model_name": os.getenv('QWEN_MODEL_NAME', 'qwen-max'),
+                "api_base": os.getenv('QWEN_API_BASE', 'https://dashscope.aliyuncs.com/compatible-mode/v1')
+            },
+            "llama": {
+                "api_key": os.getenv('LLAMA_API_KEY'),
+                "model_name": os.getenv('LLAMA_MODEL_NAME', 'llama3.3-70b-instruct'),
+                "api_base": os.getenv('LLAMA_API_BASE', 'https://api.llama.com/v1')
+            }
+        }
         
-        if not api_key:
-            raise ValueError("未设置 DEEPSEEK_API_KEY 环境变量")
+        if model_name not in model_config:
+            raise ValueError(f"不支持的模型类型: {model_name}")
             
-        print(f"使用模型: {actual_model_name}")
+        config = model_config[model_name]
+        if not config["api_key"]:
+            raise ValueError(f"未设置 {model_name.upper()}_API_KEY 环境变量")
+            
+        print(f"使用模型: {config['model_name']}")
         
         # 构建提示词
         prompt_builder = PromptBuilder()
@@ -53,7 +82,8 @@ async def get_model_output(question: str, model_name: str, proxy: str = None) ->
             "answer": question.get("answer", ""),
             "题目领域": question.get("题目领域", "通用"),
             "难度级别": question.get("难度级别", "中等"),
-            "测试指标": question.get("测试指标", "通用能力")
+            "测试指标": question.get("测试指标", "通用能力"),
+            "choices": question.get("choices", {})  # 添加选项字段
         }
         prompt = prompt_builder.build_prompt(question_data)
         
@@ -66,7 +96,10 @@ async def get_model_output(question: str, model_name: str, proxy: str = None) ->
         print("=== Prompt结束 ===\n")
         
         # 创建模型客户端
-        async with ModelClient(model_name, api_key=api_key, model_name=actual_model_name, proxy=proxy) as client:
+        async with ModelClient(model_name, 
+                             api_key=config["api_key"], 
+                             model_name=config["model_name"], 
+                             proxy=proxy) as client:
             # 发送到模型并获取响应
             response = await client.send_prompt(prompt)
             print("成功获取模型输出")
@@ -167,8 +200,8 @@ def main():
     parser.add_argument(
         "--proxy",
         type=str,
-        default="http://127.0.0.1:8453",
-        help="代理服务器地址（可选，默认：http://127.0.0.1:8453）"
+        default=None,
+        help="代理服务器地址（可选，默认不使用代理）"
     )
     
     args = parser.parse_args()

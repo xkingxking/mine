@@ -1,14 +1,16 @@
-import requests
+# Please install OpenAI SDK first: `pip3 install openai`
 
-url = "https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze"
-params = {
-    "key": "AIzaSyB5ut4szJ7itMv4NFCleLF87EcVvoGgKI4"
-}
-data = {
-    "comment": {"text": "Hello world"},
-    "requestedAttributes": {"TOXICITY": {}}
-}
-response = requests.post(url, params=params, json=data)
-print("状态码:", response.status_code)
-print("响应内容:")
-print(response.json())
+from openai import OpenAI
+
+client = OpenAI(api_key="sk-72aa33ae58ae497680a62ebafb8d1cb3", base_url="https://api.deepseek.com")
+
+response = client.chat.completions.create(
+    model="deepseek-chat",
+    messages=[
+        {"role": "system", "content": "You are a helpful assistant"},
+        {"role": "user", "content": "Hello"},
+    ],
+    stream=False
+)
+
+print(response.choices[0].message.content)
