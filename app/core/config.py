@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     
     # 安全配置
     SECRET_KEY: str = "your-secret-key-here"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 11520  # 8 days
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 11520
     
     # 数据库配置
     DATABASE_URL: str = "postgresql://user:password@localhost/dbname"

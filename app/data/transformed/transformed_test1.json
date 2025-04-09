@@ -1,0 +1,513 @@
+{
+  "metadata": {
+    "total_transformed_versions": 35
+  },
+  "transformed_at": "2025-04-09T16:48:01.503420",
+  "source_file": "5_questions.json",
+  "questions": [
+    {
+      "original_question": {
+        "id": "001",
+        "type": "true_false",
+        "题目领域": "学科综合能力",
+        "测试指标": "准确性",
+        "难度级别": "简单",
+        "question": "Python中的\"print(3 + 5)\"会输出8。",
+        "answer": "正确"
+      },
+      "transformed_versions": [
+        {
+          "transform_method": "（语序调整）",
+          "difficulty": "简单",
+          "question": "会输出8的是Python中的\"print(3 + 5)\"。",
+          "options": {},
+          "answer": "正确",
+          "type": "true_false",
+          "original_id": "001",
+          "parsing_warnings": []
+        },
+        {
+          "transform_method": "（条件变化）",
+          "difficulty": "中等",
+          "question": "在Python 3.9版本中，执行\"print(3 + 5)\"会输出8。",
+          "options": {},
+          "answer": "正确",
+          "type": "true_false",
+          "original_id": "001",
+          "parsing_warnings": []
+        },
+        {
+          "transform_method": "（表达方式转换）",
+          "difficulty": "简单",
+          "question": "Python代码\"print(3 + 5)\"的运行结果是8。",
+          "options": {},
+          "answer": "正确",
+          "type": "true_false",
+          "original_id": "001",
+          "parsing_warnings": []
+        },
+        {
+          "transform_method": "（正反对比）",
+          "difficulty": "中等",
+          "question": "以下哪段Python代码会输出8？A. print(3 + 5)  B. print(\"3 + 5\")",
+          "options": {},
+          "answer": "A",
+          "type": "true_false",
+          "original_id": "001",
+          "parsing_warnings": []
+        },
+        {
+          "transform_method": "（情境补充）",
+          "difficulty": "简单",
+          "question": "小明在学习Python基础时，写了代码\"print(3 + 5)\"，这段代码会输出8。",
+          "options": {},
+          "answer": "正确",
+          "type": "true_false",
+          "original_id": "001",
+          "parsing_warnings": []
+        },
+        {
+          "transform_method": "（考点拓展）",
+          "difficulty": "简单",
+          "question": "Python中的\"print(3 + 5)\"会输出什么？",
+          "options": {},
+          "answer": "8",
+          "type": "true_false",
+          "original_id": "001",
+          "parsing_warnings": []
+        },
+        {
+          "transform_method": "（题型更改）",
+          "difficulty": "简单",
+          "question": "请写出执行后会输出8的Python代码。",
+          "options": {},
+          "answer": "print(3 + 5)",
+          "type": "short_answer",
+          "original_id": "001",
+          "parsing_warnings": []
+        }
+      ]
+    },
+    {
+      "original_question": {
+        "id": "002",
+        "type": "short_answer",
+        "题目领域": "学科综合能力",
+        "测试指标": "准确性",
+        "难度级别": "中等",
+        "question": "请将以下英文句子翻译成中文，并确保语义准确：\"The rapid development of artificial intelligence has significantly impacted various industries, including healthcare, finance, and education.\"",
+        "answer": "人工智能的快速发展对医疗、金融和教育等多个行业产生了重大影响。"
+      },
+      "transformed_versions": [
+        {
+          "transform_method": "（背景情境变化）",
+          "difficulty": "中等",
+          "question": "在科技飞速发展的今天，人工智能技术日新月异。请将以下英文句子翻译成中文，并确保语义准确：\"The rapid development of artificial intelligence has significantly impacted various industries, including healthcare, finance, and education.\"",
+          "options": {},
+          "answer": "人工智能的快速发展对医疗、金融和教育等多个行业产生了重大影响。",
+          "type": "short_answer",
+          "original_id": "002",
+          "parsing_warnings": []
+        },
+        {
+          "transform_method": "（限制条件调整）",
+          "difficulty": "困难",
+          "question": "请将以下英文句子翻译成中文，确保语义准确且使用正式书面语风格：\"The rapid development of artificial intelligence has significantly impacted various industries, including healthcare, finance, and education.\"",
+          "options": {},
+          "answer": "人工智能的迅猛发展已对包括医疗、金融及教育在内的诸多行业产生深远影响。",
+          "type": "short_answer",
+          "original_id": "002",
+          "parsing_warnings": []
+        },
+        {
+          "transform_method": "（开放性提示）",
+          "difficulty": "中等",
+          "question": "请将以下英文句子翻译成中文，并思考人工智能发展对不同行业的具体影响方式：\"The rapid development of artificial intelligence has significantly impacted various industries, including healthcare, finance, and education.\"",
+          "options": {},
+          "answer": "人工智能的快速发展对医疗、金融和教育等多个行业产生了重大影响。",
+          "type": "short_answer",
+          "original_id": "002",
+          "parsing_warnings": []
+        },
+        {
+          "transform_method": "（表达方式转换）",
+          "difficulty": "中等",
+          "question": "如何用中文准确表达以下英文句子的含义？\"The rapid development of artificial intelligence has significantly impacted various industries, including healthcare, finance, and education.\"",
+          "options": {},
+          "answer": "人工智能的快速发展对医疗、金融和教育等多个行业产生了重大影响。",
+          "type": "short_answer",
+          "original_id": "002",
+          "parsing_warnings": []
+        },
+        {
+          "transform_method": "（理论与实践结合）",
+          "difficulty": "困难",
+          "question": "请将以下英文句子翻译成中文，并解释\"significantly impacted\"这一短语在翻译过程中的处理原则：\"The rapid development of artificial intelligence has significantly impacted various industries, including healthcare, finance, and education.\"",
+          "options": {},
+          "answer": "人工智能的快速发展对医疗、金融和教育等多个行业产生了重大影响。翻译\"significantly impacted\"时，采用\"重大影响\"的译法既忠实于原文程度副词的含义，又符合中文四字短语的表达习惯，体现了翻译的准确性和可读性原则。",
+          "type": "short_answer",
+          "original_id": "002",
+          "parsing_warnings": []
+        },
+        {
+          "transform_method": "（考点拓展）",
+          "difficulty": "中等",
+          "question": "请分析以下英文句子的句子结构，并指出主谓宾成分：\"The rapid development of artificial intelligence has significantly impacted various industries, including healthcare, finance, and education.\"",
+          "options": {},
+          "answer": "主语：The rapid development of artificial intelligence；谓语：has impacted；宾语：various industries。including引导的现在分词短语作后置定语修饰industries。",
+          "type": "short_answer",
+          "original_id": "002",
+          "parsing_warnings": []
+        },
+        {
+          "transform_method": "（题型更改）",
+          "difficulty": "中等",
+          "question": "以下哪个中文翻译最准确地表达了原句的含义？\"The rapid development of artificial intelligence has significantly impacted various industries, including healthcare, finance, and education.\"",
+          "options": {
+            "A": "1. 人工智能发展很快，影响了一些行业如医疗和金融。",
+            "B": "2. 人工智能的快速发展对医疗、金融和教育等多个行业产生了重大影响。",
+            "C": "3. 快速发展的人工智能改变了很多行业，其中有医疗行业。",
+            "D": "4. 人工智能在医疗、金融和教育领域发展迅速并产生影响。"
+          },
+          "answer": "2",
+          "type": "choice",
+          "original_id": "002",
+          "parsing_warnings": [
+            "Parsed options based on newlines, assigned A, B, C..."
+          ]
+        }
+      ]
+    },
+    {
+      "original_question": {
+        "id": "003",
+        "type": "true_false",
+        "题目领域": "学科综合能力",
+        "测试指标": "准确性",
+        "难度级别": "困难",
+        "question": "在Python中，`lambda x: x ** 2` 是一个匿名函数，其功能是计算输入参数的平方。",
+        "answer": "正确"
+      },
+      "transformed_versions": [
+        {
+          "transform_method": "（语序调整）",
+          "difficulty": "困难",
+          "question": "计算输入参数的平方是Python中`lambda x: x ** 2`这个匿名函数的功能。",
+          "options": {},
+          "answer": "正确",
+          "type": "true_false",
+          "original_id": "003",
+          "parsing_warnings": []
+        },
+        {
+          "transform_method": "（条件变化）",
+          "difficulty": "简单",
+          "question": "在Python中，`lambda x: x ** 2` 是一个匿名函数。",
+          "options": {},
+          "answer": "正确",
+          "type": "true_false",
+          "original_id": "003",
+          "parsing_warnings": []
+        },
+        {
+          "transform_method": "（表达方式转换）",
+          "difficulty": "困难",
+          "question": "Python中的`lambda x: x ** 2`匿名函数用于对输入参数进行平方运算。",
+          "options": {},
+          "answer": "正确",
+          "type": "true_false",
+          "original_id": "003",
+          "parsing_warnings": []
+        },
+        {
+          "transform_method": "（正反对比）",
+          "difficulty": "困难",
+          "question": "以下哪个Python匿名函数的功能是计算输入参数的平方？A. `lambda x: x ** 2` B. `lambda x: x * 2`",
+          "options": {},
+          "answer": "A",
+          "type": "true_false",
+          "original_id": "003",
+          "parsing_warnings": []
+        },
+        {
+          "transform_method": "（情境补充）",
+          "difficulty": "困难",
+          "question": "在数据分析中，经常需要对数据进行平方运算。在Python中，`lambda x: x ** 2` 是一个匿名函数，其功能是计算输入参数的平方。",
+          "options": {},
+          "answer": "正确",
+          "type": "true_false",
+          "original_id": "003",
+          "parsing_warnings": []
+        },
+        {
+          "transform_method": "（考点拓展）",
+          "difficulty": "困难",
+          "question": "在Python中，`lambda x: x ** 2` 是一个匿名函数，请写出该函数的等效普通函数定义。",
+          "options": {},
+          "answer": "def square(x): return x ** 2",
+          "type": "true_false",
+          "original_id": "003",
+          "parsing_warnings": []
+        },
+        {
+          "transform_method": "（题型更改）",
+          "difficulty": "困难",
+          "question": "在Python中，以下哪个匿名函数的功能是计算输入参数的平方？",
+          "options": {
+            "A": "`",
+            "X": "",
+            "B": "`",
+            "C": "`",
+            "D": "`"
+          },
+          "answer": "B",
+          "type": "choice",
+          "original_id": "003",
+          "parsing_warnings": []
+        }
+      ]
+    },
+    {
+      "original_question": {
+        "id": "004",
+        "type": "choice",
+        "题目领域": "学科综合能力",
+        "测试指标": "准确性",
+        "难度级别": "简单",
+        "question": "以下哪个选项是Python中用于输出内容的函数？",
+        "answer": "B",
+        "choices": {
+          "A": "input()",
+          "B": "print()",
+          "C": "output()",
+          "D": "display()"
+        }
+      },
+      "transformed_versions": [
+        {
+          "transform_method": "（问题重述）",
+          "difficulty": "简单",
+          "question": "在Python编程中，如果想在屏幕上显示信息，应该使用哪个函数？",
+          "options": {
+            "A": "input()",
+            "B": "print()",
+            "C": "output()",
+            "D": "display()"
+          },
+          "answer": "B",
+          "type": "choice",
+          "original_id": "004",
+          "parsing_warnings": []
+        },
+        {
+          "transform_method": "（选项细化）",
+          "difficulty": "简单",
+          "question": "以下哪个选项是Python中用于输出内容的函数？",
+          "options": {
+            "A": "input()，用于从用户获取输入",
+            "B": "print()，用于将内容输出到屏幕",
+            "C": "output()，Python中没有这个内置函数",
+            "D": "display()，通常在某些库如IPython中使用，不是内置函数"
+          },
+          "answer": "B",
+          "type": "choice",
+          "original_id": "004",
+          "parsing_warnings": []
+        },
+        {
+          "transform_method": "（情境嵌入）",
+          "difficulty": "简单",
+          "question": "小明正在学习Python编程，他想要在屏幕上显示“Hello, World!”，应该使用哪个函数？",
+          "options": {
+            "A": "input()",
+            "B": "print()",
+            "C": "output()",
+            "D": "display()"
+          },
+          "answer": "B",
+          "type": "choice",
+          "original_id": "004",
+          "parsing_warnings": []
+        },
+        {
+          "transform_method": "（难度调整）",
+          "difficulty": "中等",
+          "question": "以下哪个选项是Python中用于输出内容的函数，并且可以接受多个参数并用分隔符连接？",
+          "options": {
+            "A": "input()",
+            "B": "print()",
+            "C": "output()",
+            "D": "display()",
+            "E": "write()"
+          },
+          "answer": "B",
+          "type": "choice",
+          "original_id": "004",
+          "parsing_warnings": []
+        },
+        {
+          "transform_method": "（增加干扰）",
+          "difficulty": "简单",
+          "question": "以下哪个选项是Python中用于输出内容的函数？",
+          "options": {
+            "A": "input()",
+            "B": "print()",
+            "C": "output()",
+            "D": "display()",
+            "E": "echo()"
+          },
+          "answer": "B",
+          "type": "choice",
+          "original_id": "004",
+          "parsing_warnings": []
+        },
+        {
+          "transform_method": "（考点拓展）",
+          "difficulty": "简单",
+          "question": "在Python中，哪个函数可以用于将多个字符串连接并输出到屏幕？",
+          "options": {
+            "A": "input()",
+            "B": "print()",
+            "C": "concat()",
+            "D": "join()"
+          },
+          "answer": "B",
+          "type": "choice",
+          "original_id": "004",
+          "parsing_warnings": []
+        },
+        {
+          "transform_method": "（题型更改）",
+          "difficulty": "简单",
+          "question": "请写出Python中用于输出内容的函数名称。",
+          "options": {},
+          "answer": "print",
+          "type": "short_answer",
+          "original_id": "004",
+          "parsing_warnings": []
+        }
+      ]
+    },
+    {
+      "original_question": {
+        "id": "005",
+        "type": "choice",
+        "题目领域": "学科综合能力",
+        "测试指标": "准确性",
+        "难度级别": "中等",
+        "question": "以下关于Python语言的说法，哪一个是错误的？",
+        "answer": "D",
+        "choices": {
+          "A": "Python是一种解释型语言",
+          "B": "Python的列表(list)是可变的(mutable)",
+          "C": "Python的元组(tuple)是不可变的(immutable)",
+          "D": "Python的变量需要显式声明类型"
+        }
+      },
+      "transformed_versions": [
+        {
+          "transform_method": "（问题重述）",
+          "difficulty": "中等",
+          "question": "关于Python语言的特性，下列哪一项描述是不正确的？",
+          "options": {
+            "A": "Python代码在运行时由解释器逐行执行，属于解释型语言",
+            "B": "Python中的列表(list)创建后可以修改其中的元素或长度",
+            "C": "Python中的元组(tuple)一旦创建，其内容和长度均不可更改",
+            "D": "使用Python变量时必须先声明其数据类型（如int/str）"
+          },
+          "answer": "D",
+          "type": "choice",
+          "original_id": "005",
+          "parsing_warnings": []
+        },
+        {
+          "transform_method": "（选项细化）",
+          "difficulty": "中等",
+          "question": "以下关于Python语言的说法，哪一个是错误的？",
+          "options": {
+            "A": "Python程序运行时通过解释器直接执行源代码，无需编译为机器码，因此属于解释型语言",
+            "B": "列表(list)支持动态增删元素，例如可以通过append()方法添加新元素或通过索引修改现有元素",
+            "C": "元组(tuple)创建后无法添加/删除元素，也无法修改现有元素的引用，但若元素本身是可变对象（如列表），其内容可被修改",
+            "D": "Python采用动态类型机制，变量赋值时自动推断类型（如x=1为int），无需像C语言那样用int x=1声明类型"
+          },
+          "answer": "D",
+          "type": "choice",
+          "original_id": "005",
+          "parsing_warnings": []
+        },
+        {
+          "transform_method": "（情境嵌入）",
+          "difficulty": "中等",
+          "question": "某数据分析师在Python培训课上听到以下说法，其中错误的是？",
+          "options": {
+            "A": "Python脚本运行时由解释器实时翻译执行，适合快速迭代开发",
+            "B": "存储用户行为数据时，用列表(list)便于后续动态补充新记录",
+            "C": "用元组(tuple)存储数据库连接配置信息可防止程序意外修改参数",
+            "D": "定义变量时必须像Java那样指定类型，例如str name=\"Alice\""
+          },
+          "answer": "D",
+          "type": "choice",
+          "original_id": "005",
+          "parsing_warnings": []
+        },
+        {
+          "transform_method": "（难度调整）",
+          "difficulty": "困难",
+          "question": "关于Python类型系统的深层特性，以下说法错误的是？",
+          "options": {
+            "A": "解释型特性使得Python支持REPL交互环境，但执行效率低于编译型语言",
+            "B": "列表的可变性体现在其内存地址不变时，仍可修改内部元素引用",
+            "C": "元组的不可变性仅针对顶层元素引用，若元素为可变对象则存在\"浅不可变\"现象",
+            "D": "Python3.6引入的类型注解(type hints)会强制进行运行时类型检查",
+            "E": "is运算符比较对象ID时，小整数(-5~256)因驻留机制可能出现a is b但a==b不成立"
+          },
+          "answer": "D",
+          "type": "choice",
+          "original_id": "005",
+          "parsing_warnings": []
+        },
+        {
+          "transform_method": "（增加干扰）",
+          "difficulty": "中等",
+          "question": "以下关于Python语言的说法，哪一个是错误的？",
+          "options": {
+            "A": "Python采用解释器执行，但可通过pyc文件缓存字节码",
+            "B": "列表推导式(List Comprehension)会生成新的可变列表对象",
+            "C": "命名元组(namedtuple)具有元组的不可变特性",
+            "D": "变量使用前需用关键字声明类型，如var x:int=1",
+            "E": "字典的键必须使用不可变类型，因此元组可作为键但列表不能"
+          },
+          "answer": "D",
+          "type": "choice",
+          "original_id": "005",
+          "parsing_warnings": []
+        },
+        {
+          "transform_method": "（考点拓展）",
+          "difficulty": "中等",
+          "question": "以下Python代码的执行结果是什么？\n```python\na = (1, [2, 3])\na[1].append(4)\nprint(a)\n```",
+          "options": {
+            "A": "(1, [2, 3])",
+            "B": "(1, [2, 3, 4])",
+            "C": "抛出TypeError异常",
+            "D": "(1, [2, 3], 4)"
+          },
+          "answer": "B",
+          "type": "choice",
+          "original_id": "005",
+          "parsing_warnings": []
+        },
+        {
+          "transform_method": "（题型更改）",
+          "difficulty": "中等",
+          "question": "判断正误：Python变量使用前需要通过类似\"int x=1\"的语法显式声明类型。",
+          "options": {},
+          "answer": "False",
+          "type": "true_false",
+          "original_id": "005",
+          "parsing_warnings": []
+        }
+      ]
+    }
+  ]
+}

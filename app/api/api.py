@@ -63,7 +63,7 @@ for directory in [BASE_DATA_DIR, TRANSFORMED_DATA_DIR, OUTPUT_FOLDER]:
 load_dotenv()
 
 # --- Directory configuration (from app.py) ---
-APP_DIR = os.path.join(BASE_DIR, '..')  # 现在是app/api，上层就是app目录
+APP_DIR = os.path.join(BASE_DIR)  # 现在是app/api，上层就是app目录
 QUESTIONS_DIR = os.path.join(APP_DIR, 'data')  # 原题库直接使用data目录
 LOGS_DIR = os.path.join(APP_DIR, 'logs', 'transformed_logs')
 TASKS_LOG_FILE = os.path.join(LOGS_DIR, 'tasks.json')
@@ -142,7 +142,19 @@ task_lock = threading.Lock()
 def load_tasks():
     if os.path.exists(TASKS_LOG_FILE):
         with open(TASKS_LOG_FILE, 'r', encoding='utf-8') as f:
-            return json.load(f)
+            tasks_data = json.load(f)
+            # 将旧版本中以UUID为键的任务转换为以任务名称为键
+            converted_tasks = {}
+            for task_id, task_info in tasks_data.items():
+                task_name = task_info.get('name')
+                if task_name:
+                    # 使用任务名称作为新的键
+                    task_info['id'] = task_name
+                    converted_tasks[task_name] = task_info
+                else:
+                    # 如果没有任务名称，保持原样
+                    converted_tasks[task_id] = task_info
+            return converted_tasks
     return {}
 
 
@@ -654,10 +666,58 @@ def get_base_bank_metadata():
 def get_transformed_bank_metadata():
     """获取变形题库元数据"""
     transformed_banks = []
+    
+    # 读取任务信息
+    tasks_data = {}
+    tasks_log_path = os.path.join(APP_DIR, 'logs/transformed_logs/tasks.json')
+    if os.path.exists(tasks_log_path):
+        try:
+            with open(tasks_log_path, 'r', encoding='utf-8') as f:
+                tasks_data = json.load(f)
+        except Exception as e:
+            app.logger.error(f"读取tasks.json文件失败: {e}")
+    
+    # 创建transformed文件名到任务名称的映射
+    file_to_task_map = {}
+    for task_id, task_info in tasks_data.items():
+        if 'transformed_file' in task_info:
+            file_to_task_map[task_info['transformed_file']] = task_id
+    
+    # 读取变形题库文件
     for file in TRANSFORMED_DATA_DIR.glob('*.json'):
-        with open(file, 'r', encoding='utf-8') as f:
-            bank = json.load(f)
-            transformed_banks.append(bank)
+        filename = file.name
+        try:
+            with open(file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                
+                # 提取必要的元数据，只保留最基本信息
+                bank = {
+                    "metadata": {
+                        "total_transformed_versions": data.get("metadata", {}).get("total_transformed_versions", 0)
+                    },
+                    "transformed_at": data.get("transformed_at", datetime.now().isoformat()),
+                    "source_file": data.get("source_file", "unknown.json"),
+                    "questions": data.get("questions", [])
+                }
+                
+                # 添加任务名称信息
+                task_name = None
+                if filename in file_to_task_map:
+                    task_name = file_to_task_map[filename]
+                elif filename.startswith('transformed_'):
+                    # 尝试从文件名提取任务名
+                    potential_task_id = filename.replace('transformed_', '').replace('.json', '')
+                    if potential_task_id in tasks_data:
+                        task_name = potential_task_id
+                
+                # 添加任务名称到bank中
+                if task_name:
+                    bank['taskName'] = task_name
+                
+                transformed_banks.append(bank)
+        except Exception as e:
+            app.logger.error(f"无法加载变形题库文件 {filename}: {str(e)}")
+            
     return transformed_banks
 
 
@@ -730,20 +790,50 @@ def get_bank_questions(bank_id):
             data = json.load(f)
             questions = []
             if is_transformed:
-                for item in data:
-                    question = {
-                        "id": item.get("original_id", "unknown"),
-                        "type": item["type"],
-                        "question": item["question"],
-                        "answer": item["answer"],
-                        "transform_method": item["transform_method"],
-                        "difficulty": item["difficulty"]
-                    }
-                    if item["type"] == "choice":
-                        options = item["options"].split("；") if "；" in item["options"] else item["options"].split(";")
-                        question["choices"] = {chr(65 + i): opt.strip() for i, opt in enumerate(options)}
-                    questions.append(question)
+                # 处理变形题库的新格式
+                if 'questions' in data and isinstance(data['questions'], list):
+                    # 新格式：包含原始问题和变形版本
+                    for question_obj in data['questions']:
+                        original_question = question_obj.get('original_question', {})
+                        transformed_versions = question_obj.get('transformed_versions', [])
+                        
+                        # 添加变形版本题目
+                        for version in transformed_versions:
+                            transformed_question = {
+                                "id": version.get("original_id", original_question.get("id", "unknown")),
+                                "type": version.get("type", original_question.get("type", "unknown")),
+                                "question": version.get("question", ""),
+                                "answer": version.get("answer", ""),
+                                "transform_method": version.get("transform_method", "未知"),
+                                "difficulty": version.get("difficulty", "中等")
+                            }
+                            
+                            # 处理选项
+                            if version.get("type") == "choice" and version.get("options"):
+                                if isinstance(version["options"], dict):
+                                    transformed_question["choices"] = version["options"]
+                                elif isinstance(version["options"], str):
+                                    options = version["options"].split("；") if "；" in version["options"] else version["options"].split(";")
+                                    transformed_question["choices"] = {chr(65 + i): opt.strip() for i, opt in enumerate(options)}
+                            
+                            questions.append(transformed_question)
+                else:
+                    # 老式变形题库直接包含题目列表
+                    for item in data:
+                        question = {
+                            "id": item.get("original_id", "unknown"),
+                            "type": item["type"],
+                            "question": item["question"],
+                            "answer": item["answer"],
+                            "transform_method": item["transform_method"],
+                            "difficulty": item["difficulty"]
+                        }
+                        if item["type"] == "choice":
+                            options = item["options"].split("；") if "；" in item["options"] else item["options"].split(";")
+                            question["choices"] = {chr(65 + i): opt.strip() for i, opt in enumerate(options)}
+                        questions.append(question)
             else:
+                # 处理原始题库
                 raw_questions = data.get('questions', data) if isinstance(data, dict) else data
                 for item in raw_questions:
                     question = {
@@ -758,8 +848,26 @@ def get_bank_questions(bank_id):
                     if item.get("choices"):
                         question["choices"] = item["choices"]
                     questions.append(question)
-            return jsonify({"questions": questions, "total": len(questions)})
+            # 添加元数据信息到响应中
+            metadata = {}
+            if is_transformed:
+                # 处理新格式的简化元数据
+                metadata = {
+                    "total_transformed_versions": data.get("metadata", {}).get("total_transformed_versions", 0),
+                    "transformed_at": data.get("transformed_at", ""),
+                    "source_file": data.get("source_file", "")
+                }
+            else:
+                # 处理原始题库元数据
+                metadata = data.get("metadata", {})
+                
+            return jsonify({
+                "questions": questions, 
+                "total": len(questions),
+                "metadata": metadata
+            })
     except Exception as e:
+        app.logger.error(f"获取题库题目时出错: {str(e)}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
 
@@ -1004,10 +1112,10 @@ def create_task():
             return jsonify({'status': 'error', 'message': f'源文件不存在或路径是目录: {source_file}'}), 404
         with task_lock:
             # 检查任务名是否重复
-            if any(task['name'] == task_name for task in tasks.values()):
+            task_id = task_name  # 使用任务名称作为ID
+            if task_id in tasks:
                 return jsonify({'status': 'error', 'message': '任务名称已存在'}), 400
             # 创建新任务
-            task_id = str(uuid.uuid4())
             task = {
                 'id': task_id,
                 'name': task_name,

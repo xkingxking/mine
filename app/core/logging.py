@@ -8,6 +8,7 @@ def setup_logging():
     # 创建日志目录
     log_dir = "logs"
     if not os.path.exists(log_dir):
+        print(f"创建日志目录: {log_dir}")
         os.makedirs(log_dir)
     
     # 配置日志格式

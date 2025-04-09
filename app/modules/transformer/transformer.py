@@ -955,8 +955,10 @@ def transform_questions(source_file, output_file, progress_callback=None, max_id
                  update_task_status(task_id, TASK_STATUS['COMPLETED'], "输入文件不包含问题")
              # 写入空的但结构完整的 result
              result['transformed_at'] = datetime.now().isoformat()
-             result['metadata'] = source_data.get('metadata', {}) # 复制源元数据
-             result['metadata']['total_transformed_versions'] = 0
+             # 创建变形题库自己的元数据，只保留必要信息
+             result['metadata'] = {
+                 'total_transformed_versions': 0
+             }
              try:
                  with open(output_file, 'w', encoding='utf-8') as f:
                     json.dump(result, f, ensure_ascii=False, indent=2)
@@ -985,7 +987,10 @@ def transform_questions(source_file, output_file, progress_callback=None, max_id
         else:
              # 没有检查点，从头开始
              start_index = 0
-             result['metadata'] = source_data.get('metadata', {}) # 初始化元数据
+             # 初始化变形题库自己的元数据，只保留必要信息
+             result['metadata'] = {
+                 'total_transformed_versions': 0
+             }
              result['questions'] = [] # 确保 questions 列表是空的
 
         # 需要处理的问题列表
@@ -998,7 +1003,8 @@ def transform_questions(source_file, output_file, progress_callback=None, max_id
              if task_id:
                   update_task_status(task_id, TASK_STATUS['COMPLETED'], "所有问题已完成 (从检查点恢复)")
              result['transformed_at'] = result.get('transformed_at') or datetime.now().isoformat() # 保留或设置完成时间
-             result['metadata']['total_transformed_versions'] = sum(len(item.get('transformed_versions', [])) for item in result['questions']) # 计算总版本数
+             # 计算总变形版本数
+             result['metadata']['total_transformed_versions'] = sum(len(item.get('transformed_versions', [])) for item in result['questions'])
              # 写入最终文件
              try:
                  with open(output_file, 'w', encoding='utf-8') as f:
@@ -1008,22 +1014,17 @@ def transform_questions(source_file, output_file, progress_callback=None, max_id
              return # 任务完成
 
         # 更新元数据 (在开始处理前)
-        source_metadata = source_data.get('metadata', {})
-        result['metadata'] = result.get('metadata', {}) # 保留加载的元数据
-        result['metadata'].update({
-            'version': source_metadata.get('version', '1.0'),
-            'generated_at': source_metadata.get('generated_at'),
-            'total_source_questions': total_questions,
-            'dimensions': source_metadata.get('dimensions', []),
-            'source_generatedAt': source_metadata.get('generatedAt')
-        })
+        # 创建变形题库自己的元数据，只保留必要信息
+        result['metadata'] = {
+            'total_transformed_versions': 0  # 将在任务完成时更新
+        }
 
         # 定义监控回调函数
         def on_task_idle():
             logger.warning("任务监控检测到长时间无进度更新，正在保存中间结果并标记为暂停")
             try:
                 if result['questions']: # 确保有内容可保存
-                     # 更新时间戳
+                     # 不要在这里更新元数据中的额外字段，保持元数据结构简洁
                      result['metadata']['last_saved_at'] = datetime.now().isoformat()
                      with open(output_file, 'w', encoding='utf-8') as f:
                         json.dump(result, f, ensure_ascii=False, indent=2)
@@ -1072,7 +1073,7 @@ def transform_questions(source_file, output_file, progress_callback=None, max_id
                     current_progress_percentage = (global_index + 1) * 100 / total_questions
                     logger.info(f"进度: {global_index+1}/{total_questions} ({current_progress_percentage:.1f}%) - 本次运行已处理 {processed_count_in_this_run}")
                     try:
-                        # 更新保存时间
+                        # 更新保存时间，但不添加其他元数据字段
                         result['metadata']['last_saved_at'] = datetime.now().isoformat()
                         with open(output_file, 'w', encoding='utf-8') as f:
                             json.dump(result, f, ensure_ascii=False, indent=2)
@@ -1101,6 +1102,7 @@ def transform_questions(source_file, output_file, progress_callback=None, max_id
                 processed_count_in_this_run += 1 # 即使失败，也算作本次运行处理过
                  # 保存包含错误信息的结果，以便后续检查
                 try:
+                     # 更新保存时间，但不添加其他元数据字段
                      result['metadata']['last_saved_at'] = datetime.now().isoformat()
                      with open(output_file, 'w', encoding='utf-8') as f:
                          json.dump(result, f, ensure_ascii=False, indent=2)
@@ -1115,8 +1117,12 @@ def transform_questions(source_file, output_file, progress_callback=None, max_id
                 logger.info(f"所有 {total_questions} 个问题处理完成。")
                 if task_id:
                     update_task_status(task_id, TASK_STATUS['COMPLETED'], f"成功完成 {total_questions} 个问题的变形")
+                # 设置变形完成时间
                 result['transformed_at'] = datetime.now().isoformat()
-                result['metadata']['total_transformed_versions'] = sum(len(item.get('transformed_versions', [])) for item in result['questions']) # 计算最终版本数
+                # 计算总变形版本数并更新元数据
+                result['metadata'] = {
+                    'total_transformed_versions': sum(len(item.get('transformed_versions', [])) for item in result['questions'])
+                }
                 # Final save
                 try:
                     with open(output_file, 'w', encoding='utf-8') as f:

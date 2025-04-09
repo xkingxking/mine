@@ -37,14 +37,20 @@ const formatTransformedBankData = (bank) => {
       }
     });
   }
+  
+  // 提取变形题库的原始源题库文件名
+  const sourceFileName = bank.source_file?.replace('.json', '') || 'unknown';
+  
   return {
     ...bank,
-    id: bank.id || bank.source_file?.replace('.json', '') || 'unknown',
-    name: bank.name || `变形题库-${bank.source_file?.replace('.json', '') || '未知'}`,
+    id: bank.id || sourceFileName,
+    name: bank.taskName ? `变形题库-${bank.taskName}` : (bank.name || `变形题库-${sourceFileName}`),
     dimensions: '变形题库',
     transform_methods: Array.from(transformMethods),
     total: bank.questions?.length || 0,
-    created_at: bank.transformed_at || bank.created_at || '未知日期'
+    created_at: bank.transformed_at || bank.created_at || '未知日期',
+    // 添加额外信息以适应原先需要显示这些信息的UI组件
+    total_transformed_versions: bank.metadata?.total_transformed_versions || 0
   };
 };
 
