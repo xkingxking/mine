@@ -30,10 +30,17 @@
    - SDK支持
    - SaaS服务
 
-## 安装说明
+## 环境要求
+- Python 3.8+
+- Redis (用于任务队列)
+- 各种大模型的 API 密钥
+
+## 安装步骤
+
 1. 克隆项目
 ```bash
-git clone [项目地址]
+git clone <项目地址>
+cd <项目目录>
 ```
 
 2. 安装依赖
@@ -42,18 +49,68 @@ pip install -r requirements.txt
 ```
 
 3. 配置环境变量
-```bash
-cp .env.example .env
-# 编辑.env文件，填入必要的配置信息
+创建 `.env` 文件，添加必要的环境变量：
+```
+# 数据库配置
+DATABASE_URL=你的数据库URL
+
+# Redis配置
+REDIS_URL=你的Redis URL
+
+# API Keys
+OPENAI_API_KEY=你的OpenAI API密钥
+DEEPSEEK_API_KEY=你的Deepseek API密钥
+DOUBAO_API_KEY=你的豆包API密钥
+QWEN_API_KEY=你的通义千问API密钥
+LLAMA_API_KEY=你的Llama API密钥
+BAICHUAN_API_KEY=你的百川API密钥
+
+# 其他配置
+SECRET_KEY=你的密钥
 ```
 
-4. 启动服务
+## 运行项目
+
+1. 启动 Redis 服务
+
+2. 运行主程序
 ```bash
-python main.py
+python app/main.py
+```
+
+3. 运行 API 服务
+```bash
+python app/api/main.py
 ```
 
 ## 使用说明
-[待补充]
+
+1. 准备测试问题
+将测试问题保存在 JSON 文件中，格式如下：
+```json
+[
+  {
+    "content": "问题内容",
+    "type": "问题类型",
+    "domain": "领域",
+    "difficulty": "难度",
+    "choices": ["选项1", "选项2", "选项3", "选项4"]
+  }
+]
+```
+
+2. 运行测试
+```bash
+python app/main.py --model <模型名称> --questions <问题文件路径>
+```
+
+支持的模型：
+- openai
+- deepseek
+- doubao
+- qwen
+- llama
+
 
 ## 技术架构
 - 后端：FastAPI
