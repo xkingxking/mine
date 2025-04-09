@@ -42,9 +42,9 @@ async def get_model_output(question: str, model_name: str, proxy: str = None) ->
                 "model_name": os.getenv('OPENAI_MODEL_NAME', 'gpt-4-turbo-preview'),
                 "api_base": os.getenv('OPENAI_API_BASE', 'https://api.openai.com/v1')
             },
-            "deepseek": {
+            "deepseek-v3": {
                 "api_key": os.getenv('DEEPSEEK_API_KEY'),
-                "model_name": os.getenv('DEEPSEEK_MODEL_NAME', 'deepseek-chat'),
+                "model_name": 'deepseek-chat',
                 "api_base": os.getenv('DEEPSEEK_API_BASE', 'https://api.deepseek.com/v1')
             },
             "doubao": {

@@ -9,7 +9,7 @@ from .llama_model import LlamaModel
 
 
 # 注册所有模型
-ModelFactory.register_model("deepseek", DeepseekModel)
+ModelFactory.register_model("deepseek-v3", DeepseekModel)
 ModelFactory.register_model("perspective", PerspectiveModel)
 ModelFactory.register_model("chatgpt", ChatGPTModel)
 ModelFactory.register_model("doubao", DoubaoModel)
