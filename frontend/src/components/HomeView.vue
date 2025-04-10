@@ -24,7 +24,18 @@
           </el-carousel>
         </section>
 
-        <!-- 核心功能展示 -->
+        <!-- 向下滑动提示 -->
+        <div class="scroll-down">
+          <p>向下滑动查看更多信息</p>
+          <i class="fas fa-chevron-down"></i>
+        </div>
+
+        <!-- 新增的文字展示区域 -->
+        <section class="message-section">
+          <p class="message" ref="messageRef">{{ displayText }}</p>
+        </section>
+
+        <!-- 模型测试模块 -->
         <section class="modules-section">
           <h2 class="cyberpunk-title">测试系统核心功能矩阵</h2>
           <div class="modules-container">
@@ -137,36 +148,8 @@
           </div>
         </section>
 
-        <!-- 功能介绍 -->
-        <section class="features-section">
-          <h2 class="section-title" data-aos="fade-up">测试系统核心功能简介</h2>
-          <div class="features-container">
-            <div 
-              v-for="(feature, index) in features"
-              :key="index"
-              class="feature-card"
-              data-aos="flip-left"
-              :data-aos-delay="index * 100"
-            >
-              <div class="card-icon">
-                <i :class="feature.icon"></i>
-              </div>
-              <h3>{{ feature.title }}</h3>
-              <p>{{ feature.desc }}</p>
-            </div>
-          </div>
-        </section>
-
-        <!-- 技术架构 -->
-        <section class="architecture-section">
-          <h2 class="section-title" data-aos="fade-up">大模型测试系统技术架构</h2>
-          <div class="architecture-diagram" data-aos="zoom-in">
-              <img :src="architecture" alt="技术架构图" loading="lazy">
-          </div>
-        </section>
-        
-        <!-- 快速开始指导 -->
-        <section class="quick-start-section">
+                <!-- 快速开始指导 -->
+                <section class="quick-start-section">
           <h2 class="section-title" data-aos="fade-up">快速开始指导</h2>
           <div class="quick-start-steps">
             <div class="step" data-aos="fade-up" :data-aos-delay="0">
@@ -188,13 +171,41 @@
           </div>
         </section>
 
+                <!-- 技术架构 -->
+                <section class="architecture-section">
+          <h2 class="section-title" data-aos="fade-up">大模型测试系统技术架构</h2>
+          <div class="architecture-diagram" data-aos="zoom-in">
+              <img :src="architecture" alt="技术架构图" loading="lazy">
+          </div>
+        </section>
+
+        <!-- 功能介绍 -->
+        <section class="features-section">
+          <h2 class="section-title" data-aos="fade-up">测试系统核心功能简介</h2>
+          <div class="features-container">
+            <div 
+              v-for="(feature, index) in features"
+              :key="index"
+              class="feature-card"
+              data-aos="flip-left"
+              :data-aos-delay="index * 100"
+            >
+              <div class="card-icon">
+                <i :class="feature.icon"></i>
+              </div>
+              <h3>{{ feature.title }}</h3>
+              <p>{{ feature.desc }}</p>
+            </div>
+          </div>
+        </section>
+
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import 'animate.css'
 import AOS from 'aos'
 import 'aos/dist/aos.css'
@@ -276,12 +287,40 @@ export default {
       }
     ]);
 
+    const message = `尊敬的研究者与开发者们，欢迎来到我们的大模型综合评测页面！如今，AI 模型如雨后春笋般迅猛发展，在这海量的选择中，如何找到契合研究与开发需求的理想模型，成了一大难题。而我们的页面，便是为攻克这一难题而生。
+在这里，我们将当前主流大模型在各类评测数据集上的表现，精心整理成详尽榜单，展现在您眼前。我们致力于打造一个全面的模型测试平台，助力您拨开模型选择的重重迷雾，做出明智决策。
+通过深入剖析不同模型在各类数据集上的性能，您能够精准定位每个模型的优势与短板，从而为自己的项目挑选出最匹配的得力工具，让项目进展事半功倍。`;
+    const displayText = ref('');
+    const messageRef = ref(null);
+
+    onMounted(() => {
+      let index = 0;
+      const intervalId = setInterval(() => {
+        if (index < message.length) {
+          displayText.value += message[index];
+          index++;
+        } else {
+          clearInterval(intervalId);
+        }
+      }, 100);
+    });
+
     AOS.init({
       duration: 1000,
       once: true
     });
 
-    return { models, models2, carouselItems, stats, features, architecture, isSidebarOpen };
+    return {
+      isSidebarOpen,
+      models,
+      models2,
+      architecture,
+      carouselItems,
+      stats,
+      features,
+      displayText,
+      messageRef
+    };
   }
 }
 </script>
@@ -305,6 +344,35 @@ export default {
   max-width: 1440px;
   margin: 0 auto;
   font-family: 'Roboto', sans-serif; /* 更换为具有科技感的字体 */
+}
+
+/* 向下滑动提示样式 */
+.scroll-down {
+  text-align: center;
+  margin: 20px 0;
+  font-size: 1.5rem;
+  color: #95bade;
+  animation: bounce 1.5s infinite;
+  text-shadow: 0 0 10px #b8f2e6; /* 文字阴影，增强科技感 */
+}
+
+.scroll-down i {
+  font-size: 2rem;
+  margin-top: 10px;
+  color: #95bade;
+  text-shadow: 0 0 10px #b8f2e6; /* 文字阴影，增强科技感 */
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
 }
 
 /* 顶部轮播样式 */
@@ -366,11 +434,10 @@ export default {
   display: block;
   width: 120px;
 }
-  
 
 /* 核心功能展示样式 */
 .modules-section {
-  padding: 6rem 0;
+  padding:  0;
   position: relative;
   z-index: 1;
 }
@@ -525,7 +592,6 @@ export default {
   justify-content: center;
   gap: 1rem;
 }
-
 
 .hologram-button {
   position: relative;
@@ -757,5 +823,17 @@ export default {
 
 .quick-start-steps .step h3 {
   margin-bottom: 10px;
+}
+
+.message-section {
+  padding: 20px;
+  text-align: center;
+}
+
+.message {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 18px;
+  color: #7fb9f7; /* 蓝色，可根据需要调整 */
+  line-height: 1.6;
 }
 </style> 
