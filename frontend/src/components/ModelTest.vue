@@ -299,11 +299,16 @@ const loadModels = async () => {
         const questionsData = await fetchAllBankQuestions(bankId)
         const isTransformed = bankId.includes('transformed_')
         
+        // 用于检查题目标题是否重复的Map
+        const seenTitles = new Map()
+        
         questions.value = questionsData.map(q => {
           // 对于变形题库，使用ID和变形方法作为标题
           let title = ''
           if (isTransformed && q.transform_method) {
-            title = `${q.id} - (${q.transform_method})`
+            // 使用原始ID展示，但保留内部唯一ID
+            const displayId = q.original_id || q.id
+            title = `${displayId} - (${q.transform_method})`
           } else if (q.title) {
             // 使用后端提供的标题
             title = q.title
@@ -313,7 +318,7 @@ const loadModels = async () => {
           }
           
           return {
-            id: q.id,
+            id: q.id, // 保持唯一ID
             title: title,
             raw: q  // 保存原始题目数据
           }

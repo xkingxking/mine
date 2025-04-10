@@ -811,15 +811,19 @@ def get_bank_questions(bank_id):
                             unique_questions.add(original_id)
                         
                         # 添加变形版本题目
-                        for version in transformed_versions:
+                        for i, version in enumerate(transformed_versions):
+                            # 生成一个确保唯一的题目ID，结合原始ID、变形方法和序号
+                            unique_id = f"{version.get('original_id', original_question.get('id', 'unknown'))}_{version.get('transform_method', '').replace('（','').replace('）','')[:4]}_{i+1}"
+                            
                             transformed_question = {
-                                "id": version.get("original_id", original_question.get("id", "unknown")),
+                                "id": unique_id, # 使用唯一ID而不是原始ID
+                                "original_id": version.get("original_id", original_question.get("id", "unknown")),
                                 "type": version.get("type", original_question.get("type", "unknown")),
                                 "question": version.get("question", ""),
                                 "answer": version.get("answer", ""),
                                 "transform_method": version.get("transform_method", "未知"),
                                 "difficulty": version.get("difficulty", "中等"),
-                                "title": f"{original_question.get('id', 'unknown')} - {version.get('transform_method', '未知变形')}" # 添加标题字段用于显示
+                                "title": f"{original_question.get('id', 'unknown')} - ({version.get('transform_method', '未知变形')})" # 添加标题字段用于显示
                             }
                             
                             # 处理选项
@@ -839,15 +843,19 @@ def get_bank_questions(bank_id):
                         data['metadata']['total_transformed_versions'] = total_transformed
                 else:
                     # 老式变形题库直接包含题目列表
-                    for item in data:
+                    for i, item in enumerate(data):
+                        # 为老式变形题库也创建唯一ID
+                        unique_id = f"{item.get('original_id', 'unknown')}_{item.get('transform_method', '').replace('（','').replace('）','')[:4]}_{i+1}"
+                        
                         question = {
-                            "id": item.get("original_id", "unknown"),
+                            "id": unique_id, # 使用唯一ID
+                            "original_id": item.get("original_id", "unknown"),
                             "type": item["type"],
                             "question": item["question"],
                             "answer": item["answer"],
                             "transform_method": item["transform_method"],
                             "difficulty": item["difficulty"],
-                            "title": f"{item.get('original_id', 'unknown')} - {item.get('transform_method', '未知变形')}" # 添加标题字段
+                            "title": f"{item.get('original_id', 'unknown')} - ({item.get('transform_method', '未知变形')})" # 标题显示方式一致
                         }
                         if item["type"] == "choice":
                             options = item["options"].split("；") if "；" in item["options"] else item["options"].split(";")

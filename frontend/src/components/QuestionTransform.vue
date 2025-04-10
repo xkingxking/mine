@@ -390,6 +390,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { ElMessage, ElMessageBox, ElLoading } from 'element-plus'
 import MetadataDisplay from './MetadataDisplay.vue'
+import { useRouter, useRoute } from 'vue-router'
 
 export default {
   name: 'QuestionTransform',
@@ -397,6 +398,8 @@ export default {
     MetadataDisplay
   },
   setup() {
+    const router = useRouter();
+    const route = useRoute();
     const tasks = ref([])
     const searchQuery = ref('')
     const statusFilter = ref('')
@@ -1011,6 +1014,21 @@ export default {
     onMounted(() => {
       fetchTasks()
       startPolling()
+      
+      // 检查URL参数是否包含bankId，如果有则自动打开创建任务对话框并选择对应题库
+      if (route.query.bankId) {
+        fetchQuestionFiles().then(() => {
+          const bankId = route.query.bankId;
+          // 找到对应的题库文件
+          const matchedFile = questionFiles.value.find(file => file.includes(bankId));
+          if (matchedFile) {
+            taskForm.value.selectedFile = matchedFile;
+            dialogVisible.value = true;
+            // 生成默认任务名称
+            taskForm.value.name = `${matchedFile.split('.')[0]}_变形任务`;
+          }
+        });
+      }
     })
 
     onUnmounted(() => {

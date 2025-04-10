@@ -1232,7 +1232,11 @@ def parse_deepseek_response(response, question_type, question_id):
                 # 1. Extract Transformation Method (【...】)
                 method_match = re.match(r'【\s*([^】]+?)\s*】', section_text) # Use match at the start, non-greedy
                 if method_match:
-                    parsed_data["transform_method"] = method_match.group(1).strip()
+                    # 提取原始变形方法
+                    transform_method = method_match.group(1).strip()
+                    # 去除可能存在的括号，无论是"语序调整"还是"（语序调整）"格式
+                    transform_method = re.sub(r'[（\(]([^）\)]+)[）\)]', r'\1', transform_method)
+                    parsed_data["transform_method"] = transform_method
                     # Remove the method part from the section text for easier parsing of the rest
                     section_content = section_text[method_match.end():].strip()
                     logger.debug(f"提取到变形方式: '{parsed_data['transform_method']}'")
