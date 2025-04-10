@@ -477,11 +477,15 @@ export default {
       // 按照得分排序
       const sortedScores = [...scores].sort((a, b) => b.average_score - a.average_score);
       
-      // 取前三名为强势领域
-      const strengths = sortedScores.slice(0, 3);
+      // 获取前3名和后3名的领域
+      const top3 = sortedScores.slice(0, 3);
+      const bottom3 = sortedScores.slice(-3);
       
-      // 取后三名为弱势领域
-      const weaknesses = sortedScores.slice(-3).reverse();
+      // 筛选出表现较佳的领域（分数大于60%且在前3名）
+      const strengths = top3.filter(domain => domain.average_score >= 0.6);
+      
+      // 筛选出表现较弱的领域（分数小于60%且在后3名）
+      const weaknesses = bottom3.filter(domain => domain.average_score < 0.6);
       
       return { strengths, weaknesses };
     };
