@@ -33,7 +33,10 @@
       <!-- 侧边栏 -->
       <aside class="sidebar" :class="{ 'is-collapsed': !isSidebarOpen }">
         <div class="sidebar-menu">
-
+          <router-link to="/home" class="menu-item">
+             <i class="fas fa-home"></i>
+             <span :class="{ 'hide-text': !isSidebarOpen }">首页简介</span>
+          </router-link>
           <router-link to="/question-management" class="menu-item">
             <i class="fas fa-question-circle"></i>
             <span :class="{ 'hide-text': !isSidebarOpen }">题库管理</span>

@@ -5,11 +5,17 @@ import QuestionManagement from '../components/QuestionManagement.vue';
 import QuestionTransform from '../components/QuestionTransform.vue';
 import ModelTest from '../components/ModelTest.vue';
 import ModelCompare from '../components/ModelCompare.vue';
+import HomeView from '../components/HomeView.vue'
 
 const routes = [
   {
     path: '/',
-    redirect: '/question-management'
+    redirect: '/home'
+  },
+  {
+    path: '/home',
+    name: 'home',
+    component: HomeView
   },
   {
     path: '/files',
