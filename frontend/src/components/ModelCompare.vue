@@ -258,25 +258,6 @@
                 </el-table>
               </el-tab-pane>
               
-              <el-tab-pane label="历史评估" name="history">
-                <div ref="historyChartRef" class="detail-chart"></div>
-                
-                <el-table :data="getEvaluationHistory(selectedModel)" style="width: 100%; margin-top: 20px;">
-                  <el-table-column label="领域" prop="domain"></el-table-column>
-                  <el-table-column label="时间" prop="timestamp"></el-table-column>
-                  <el-table-column label="分数">
-                    <template #default="scope">
-                      {{ (scope.row.score * 100).toFixed(2) }}%
-                    </template>
-                  </el-table-column>
-                  <el-table-column label="正确/总数">
-                    <template #default="scope">
-                      {{ scope.row.correct_answers }}/{{ scope.row.total_questions }}
-                    </template>
-                  </el-table-column>
-                </el-table>
-              </el-tab-pane>
-              
               <el-tab-pane label="强弱领域" name="strengths">
                 <div class="strengths-weaknesses">
                   <div class="strengths">
@@ -352,7 +333,6 @@ export default {
     const matrixChartRef = ref(null);
     const statsChartRef = ref(null);
     const modelDetailChartRef = ref(null);
-    const historyChartRef = ref(null);
     const strengthsChartRef = ref(null);
     const weaknessesChartRef = ref(null);
     const improvementChartRef = ref(null);
@@ -366,7 +346,6 @@ export default {
     let matrixChart = null;
     let statsChart = null;
     let modelDetailChart = null;
-    let historyChart = null;
     let strengthsChart = null;
     let weaknessesChart = null;
     let improvementChart = null;
@@ -468,33 +447,6 @@ export default {
       // 按难度（平均分越低越难）排序
       return result.sort((a, b) => a.avgScore - b.avgScore);
     });
-    
-    // 获取模型的评估历史记录
-    const getEvaluationHistory = (modelName) => {
-      const result = [];
-      
-      if (!comparisonData.value.scores || !modelName) return result;
-      
-      const modelScores = comparisonData.value.scores[modelName] || {};
-      
-      for (const domainName in modelScores) {
-        if (modelScores[domainName].scores) {
-          modelScores[domainName].scores.forEach(score => {
-            result.push({
-              domain: domainName,
-              ...score
-            });
-          });
-        }
-      }
-      
-      // 按时间降序排列
-      return result.sort((a, b) => {
-        const dateA = new Date(a.timestamp);
-        const dateB = new Date(b.timestamp);
-        return dateB - dateA;
-      });
-    };
     
     // 获取模型在各领域的得分
     const getModelDomainScores = (modelName) => {
@@ -793,7 +745,6 @@ export default {
     const initModelDetailCharts = () => {
       nextTick(() => {
         initModelDetailChart();
-        initHistoryChart();
         initStrengthsChart();
         initWeaknessesChart();
         initImprovementChart();
@@ -1821,126 +1772,6 @@ const initImprovedTimeChart = () => {
       modelDetailChart.setOption(option);
     };
     
-    // 初始化历史评估图表
-    const initHistoryChart = () => {
-      if (!historyChartRef.value || !selectedModel.value) return;
-      
-      // 销毁已有实例
-      if (historyChart) {
-        historyChart.dispose();
-      }
-      
-      // 创建新实例
-      historyChart = echarts.init(historyChartRef.value);
-      
-      // 获取模型的评估历史记录
-      const history = getEvaluationHistory(selectedModel.value);
-      
-      // 简化历史记录处理 - 按领域分组
-      const domainHistory = {};
-      
-      history.forEach(record => {
-        if (!domainHistory[record.domain]) {
-          domainHistory[record.domain] = [];
-        }
-        
-        // 格式化日期
-        let formattedDate;
-        try {
-          const date = new Date(record.timestamp);
-          formattedDate = date.toISOString().split('T')[0];
-        } catch (e) {
-          formattedDate = record.timestamp.toString().substring(0, 10);
-        }
-        
-        domainHistory[record.domain].push({
-          date: formattedDate,
-          score: record.score * 100
-        });
-      });
-      
-      // 获取所有日期
-      const allDates = new Set();
-      for (const domain in domainHistory) {
-        domainHistory[domain].forEach(item => {
-          allDates.add(item.date);
-        });
-      }
-      const dateArray = Array.from(allDates).sort();
-      
-      // 准备系列数据
-      const series = [];
-      for (const domain in domainHistory) {
-        // 为每个日期查找分数
-        const scoreMap = {};
-        domainHistory[domain].forEach(item => {
-          scoreMap[item.date] = item.score;
-        });
-        
-        const data = dateArray.map(date => {
-          return scoreMap[date] !== undefined ? scoreMap[date] : null;
-        });
-        
-        series.push({
-          name: domain,
-          type: 'line',
-          data: data,
-          connectNulls: true,
-          symbol: 'circle',
-          symbolSize: 8
-        });
-      }
-      
-      // 设置配置
-      const option = {
-        title: {
-          text: `${selectedModel.value} 历史评估趋势`,
-          left: 'center'
-        },
-        tooltip: {
-          trigger: 'axis',
-          formatter: function(params) {
-            let result = `${params[0].axisValue}<br>`;
-            params.forEach(param => {
-              if (param.value !== null) {
-                result += `${param.seriesName}: ${param.value.toFixed(2)}%<br>`;
-              }
-            });
-            return result;
-          }
-        },
-        legend: {
-          data: Object.keys(domainHistory),
-          bottom: 0
-        },
-        grid: {
-          top: 60,
-          bottom: 60,
-          left: 60,
-          right: 40
-        },
-        xAxis: {
-          type: 'category',
-          data: dateArray,
-          axisLabel: {
-            rotate: 45
-          }
-        },
-        yAxis: {
-          type: 'value',
-          min: 0,
-          max: 100,
-          axisLabel: {
-            formatter: '{value}%'
-          }
-        },
-        series: series
-      };
-      
-      // 应用配置
-      historyChart.setOption(option);
-    };
-    
     // 初始化强势领域图表
     const initStrengthsChart = () => {
       if (!strengthsChartRef.value || !selectedModel.value) return;
@@ -2243,9 +2074,6 @@ const initImprovedTimeChart = () => {
           case 'scores':
             if (modelDetailChart) modelDetailChart.resize();
             break;
-          case 'history':
-            if (historyChart) historyChart.resize();
-            break;
           case 'strengths':
             if (strengthsChart) strengthsChart.resize();
             if (weaknessesChart) weaknessesChart.resize();
@@ -2292,13 +2120,11 @@ const initImprovedTimeChart = () => {
       matrixChartRef,
       statsChartRef,
       modelDetailChartRef,
-      historyChartRef,
       strengthsChartRef,
       weaknessesChartRef,
       improvementChartRef,
       getScoreColor,
       getDifficultyColor,
-      getEvaluationHistory,
       getModelDomainScores,
       getImprovementSuggestions,
       mergeModelColumn,
