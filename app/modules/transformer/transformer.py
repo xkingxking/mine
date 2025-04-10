@@ -46,7 +46,8 @@ TASK_STATUS = {
     'EVALUATING': 'evaluating',
     'COMPLETED': 'completed',
     'FAILED': 'failed',
-    'PAUSED': 'paused'
+    'PAUSED': 'paused',
+    'CANCELLED': 'cancelled'  # 添加取消状态
 }
 
 # 添加一个任务监控类
@@ -881,145 +882,115 @@ def transform_questions(source_file, output_file, progress_callback=None, max_id
     processed_count_in_this_run = 0 # 本次运行处理的数量
     start_index = 0 # 从哪个索引开始处理
     loaded_from_checkpoint = False
-
+    
     try:
-        # --- 检查点加载逻辑 --- 
-        if os.path.exists(output_file):
-            logger.info(f"检测到已存在的输出文件（检查点）: {output_file}，尝试加载...")
-            try:
-                with open(output_file, 'r', encoding='utf-8') as f_checkpoint:
-                    result = json.load(f_checkpoint)
-                if not isinstance(result, dict) or 'questions' not in result or not isinstance(result['questions'], list):
-                     logger.warning("检查点文件格式无效，将从头开始。")
-                     result = {'metadata': {}, 'questions': []} # 重置 result
-                else:
-                     loaded_from_checkpoint = True
-                     logger.info(f"成功从检查点加载了 {len(result['questions'])} 条已处理的记录。")
-                     # 更新元数据中的源文件和任务ID（如果需要）
-                     result['source_file'] = os.path.basename(source_file)
-                     # result['task_id'] = task_id # 可选
-            except json.JSONDecodeError as e:
-                logger.warning(f"解析检查点文件JSON失败: {output_file}, Error: {e}. 将从头开始。")
-                result = {'metadata': {}, 'questions': []} # 重置 result
-            except IOError as e:
-                 logger.warning(f"读取检查点文件失败: {output_file}, Error: {e}. 将从头开始。")
-                 result = {'metadata': {}, 'questions': []} # 重置 result
-        # --- 检查点加载结束 --- 
-
-        # 检查输入文件是否存在 (必须在检查点之后，因为需要原始问题列表)
-        if not source_file or not os.path.exists(source_file):
-            error_msg = f"输入文件不存在或无效: {source_file}"
-            logger.error(error_msg)
+        # 检查任务是否已被取消
+        def check_if_cancelled():
             if task_id:
-                update_task_status(task_id, TASK_STATUS['FAILED'], error_msg)
-            raise FileNotFoundError(error_msg)
-        
-        # 创建输出目录（如果不存在）
-        output_dir = os.path.dirname(output_file)
-        if output_dir and not os.path.exists(output_dir):
+                # 读取当前任务状态
+                task_log_path = os.path.join(
+                    os.path.dirname(os.path.abspath(__file__)), 
+                    '../../logs/transformed_logs/tasks.json'
+                )
+                if os.path.exists(task_log_path):
+                    try:
+                        with open(task_log_path, 'r', encoding='utf-8') as f:
+                            tasks_data = json.load(f)
+                        if task_id in tasks_data:
+                            current_status = tasks_data[task_id].get('status')
+                            if current_status == TASK_STATUS['CANCELLED']:
+                                logger.info(f"任务 {task_id} 已被取消，中止执行")
+                                return True
+                    except Exception as e:
+                        logger.error(f"检查任务状态时出错: {e}")
+            return False
+
+        # 如果输出文件存在，检查是否有需要从检查点恢复
+        if os.path.exists(output_file):
             try:
-                os.makedirs(output_dir)
-                logger.info(f"创建输出目录: {output_dir}")
-            except OSError as e:
-                error_msg = f"创建输出目录失败: {output_dir}, Error: {e}"
-                logger.error(error_msg)
-                if task_id:
-                    update_task_status(task_id, TASK_STATUS['FAILED'], error_msg)
-                raise # Reraise the error
+                with open(output_file, 'r', encoding='utf-8') as f:
+                    checkpoint_data = json.load(f)
+                
+                # 验证检查点数据格式
+                if (isinstance(checkpoint_data, dict) and 
+                    'questions' in checkpoint_data and 
+                    isinstance(checkpoint_data['questions'], list)):
+                    
+                    result = checkpoint_data
+                    # 已处理的问题数量
+                    processed_count = len(result['questions'])
+                    
+                    if processed_count > 0:
+                        logger.info(f"从检查点恢复，已处理 {processed_count} 个问题")
+                        loaded_from_checkpoint = True
+                        
+                        # 创建一个集合用于快速查找已处理的问题的ID
+                        processed_ids = set(q.get('id') for q in result['questions'] if q.get('id'))
+                        start_index = processed_count
+                    else:
+                        logger.info("检查点文件存在但没有已处理的问题，将从头开始")
+            except json.JSONDecodeError as e:
+                logger.error(f"读取检查点文件失败 (JSON错误): {e}")
+                # 如果检查点损坏，则从头开始
+            except Exception as e:
+                logger.error(f"从检查点恢复时出错: {e}")
+                # 从头开始处理
         
-        # 读取原始题目文件
+        # 检查任务是否已被取消
+        if check_if_cancelled():
+            return
+        
+        # 加载源题库文件
         try:
             with open(source_file, 'r', encoding='utf-8') as f:
                 source_data = json.load(f)
+            
+            # 尝试获取原始题目列表
+            if 'questions' in source_data and isinstance(source_data['questions'], list):
+                questions_to_process = source_data['questions']
+            elif isinstance(source_data, list):
+                # 如果是旧格式，直接是问题列表
+                questions_to_process = source_data
+            else:
+                raise ValueError("无法从源文件中提取题目列表")
+            
+            # 保存原始元数据
+            if 'metadata' in source_data and isinstance(source_data['metadata'], dict):
+                result['metadata'] = source_data['metadata']
+            
+            total_questions = len(questions_to_process)
+            logger.info(f"加载了 {total_questions} 个问题，需处理")
+            
         except json.JSONDecodeError as e:
-             error_msg = f"解析输入文件JSON失败: {source_file}, Error: {e}"
-             logger.error(error_msg)
-             if task_id:
-                  update_task_status(task_id, TASK_STATUS['FAILED'], error_msg)
-             raise # Reraise the error
-        except IOError as e:
-             error_msg = f"读取输入文件失败: {source_file}, Error: {e}"
-             logger.error(error_msg)
-             if task_id:
-                  update_task_status(task_id, TASK_STATUS['FAILED'], error_msg)
-             raise # Reraise the error
-
-        # 获取原始题目列表
-        all_source_questions = source_data.get('questions', [])
-        total_questions = len(all_source_questions)
-        logger.info(f"源文件中共有 {total_questions} 个问题。")
-
-        if total_questions == 0:
-             logger.warning("输入文件中没有找到问题。")
-             if task_id:
-                 update_task_status(task_id, TASK_STATUS['COMPLETED'], "输入文件不包含问题")
-             # 写入空的但结构完整的 result
-             result['transformed_at'] = datetime.now().isoformat()
-             # 创建变形题库自己的元数据，只保留必要信息
-             result['metadata'] = {
-                 'total_transformed_versions': 0
-             }
-             try:
-                 with open(output_file, 'w', encoding='utf-8') as f:
-                    json.dump(result, f, ensure_ascii=False, indent=2)
-             except IOError as e:
-                    logger.error(f"写入空的完成文件时出错: {e}")
-             return # 任务完成
-
-        # 确定从哪里开始处理
-        processed_ids = set()
-        if loaded_from_checkpoint:
-            for processed_item in result['questions']:
-                original_q = processed_item.get('original_question')
-                if original_q and isinstance(original_q, dict) and 'id' in original_q:
-                    processed_ids.add(original_q['id'])
-            
-            # 找到第一个未处理问题的索引
-            for i, question in enumerate(all_source_questions):
-                 q_id = question.get('id')
-                 if q_id is None or q_id not in processed_ids:
-                     start_index = i
-                     break
-            else: # 如果循环正常结束，说明所有问题都已处理
-                 start_index = total_questions 
-            
-            logger.info(f"根据检查点，将从索引 {start_index} (问题 {start_index + 1}) 开始处理。")
-        else:
-             # 没有检查点，从头开始
-             start_index = 0
-             # 初始化变形题库自己的元数据，只保留必要信息
-             result['metadata'] = {
-                 'total_transformed_versions': 0
-             }
-             result['questions'] = [] # 确保 questions 列表是空的
-
-        # 需要处理的问题列表
-        questions_to_process = all_source_questions[start_index:]
-        remaining_count = len(questions_to_process)
-        logger.info(f"本次运行需要处理 {remaining_count} 个问题。")
-
-        if remaining_count == 0 and loaded_from_checkpoint:
-             logger.info("所有问题已在之前的运行中完成处理。任务完成。")
-             if task_id:
-                  update_task_status(task_id, TASK_STATUS['COMPLETED'], "所有问题已完成 (从检查点恢复)")
-             result['transformed_at'] = result.get('transformed_at') or datetime.now().isoformat() # 保留或设置完成时间
-             # 计算总变形版本数
-             result['metadata']['total_transformed_versions'] = sum(len(item.get('transformed_versions', [])) for item in result['questions'])
-             # 写入最终文件
-             try:
-                 with open(output_file, 'w', encoding='utf-8') as f:
-                    json.dump(result, f, ensure_ascii=False, indent=2)
-             except IOError as e:
-                 logger.error(f"写入最终完成文件时出错: {e}")
-             return # 任务完成
-
-        # 更新元数据 (在开始处理前)
-        # 创建变形题库自己的元数据，只保留必要信息
-        result['metadata'] = {
-            'total_transformed_versions': 0  # 将在任务完成时更新
-        }
-
-        # 定义监控回调函数
+            error_msg = f"解析源文件失败 (JSON错误): {e}"
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+        except Exception as e:
+            error_msg = f"加载源文件失败: {e}"
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+        
+        # 如果我们从检查点恢复，并且有已处理ID的集合
+        if loaded_from_checkpoint and 'processed_ids' in locals():
+            # 过滤出未处理的问题
+            # 我们仍然保留整个问题列表，但从start_index开始处理
+            logger.info(f"将从索引 {start_index} 开始处理剩余的 {total_questions - start_index} 个问题")
+        
+        transformer = QuestionTransformer()
+        
+        # 如果没有已处理的，则初始化进度为0
+        current_progress = (start_index / total_questions * 100) if total_questions > 0 else 0
+        if progress_callback:
+            progress_callback(current_progress)
+        
+        # 启动任务监控
+        monitor.start(callback=lambda: on_task_idle())
+        
+        # 检查任务是否已被取消
+        if check_if_cancelled():
+            return
+        
+        # 定义任务空闲回调函数
         def on_task_idle():
             logger.warning("任务监控检测到长时间无进度更新，正在保存中间结果并标记为暂停")
             try:
@@ -1040,16 +1011,27 @@ def transform_questions(source_file, output_file, progress_callback=None, max_id
                 if task_id:
                     update_task_status(task_id, TASK_STATUS['FAILED'], f"自动暂停时保存中间结果失败: {e}")
         
-        # 启动监控
-        monitor.start(callback=on_task_idle)
-        
         # 开始处理剩余的题目
         transformer = QuestionTransformer() # 创建一次实例
-
-        for current_index_in_run, question in enumerate(questions_to_process):
+        
+        for current_index_in_run, question in enumerate(questions_to_process[start_index:]):
+            # 在每个循环开始时检查任务是否被取消
+            if check_if_cancelled():
+                logger.info(f"任务 {task_id} 已被取消，中止处理")
+                # 保存当前处理结果
+                try:
+                    # 设置转换时间
+                    result['transformed_at'] = datetime.now().isoformat()
+                    with open(output_file, 'w', encoding='utf-8') as f:
+                        json.dump(result, f, ensure_ascii=False, indent=2)
+                    logger.info(f"已保存中间结果到: {output_file}")
+                except Exception as e:
+                    logger.error(f"保存中间结果时出错: {e}")
+                return
+                
             global_index = start_index + current_index_in_run # 在原始列表中的全局索引
             question_id = question.get('id', f'q_{global_index+1}')
-            logger.debug(f"--- 开始处理问题 {global_index+1}/{total_questions} (本次运行第 {current_index_in_run+1}/{remaining_count}): ID={question_id} ---")
+            logger.debug(f"--- 开始处理问题 {global_index+1}/{total_questions} (本次运行第 {current_index_in_run+1}/{total_questions}): ID={question_id} ---")
             
             monitor.update_progress()
             if not monitor.running:
@@ -1069,7 +1051,7 @@ def transform_questions(source_file, output_file, progress_callback=None, max_id
 
                 # Log progress and save intermediate results periodically
                 # 保存逻辑：每5个 *新处理* 的问题保存一次，或者当处理完最后一个问题时保存
-                if processed_count_in_this_run % 5 == 0 or (current_index_in_run + 1) == remaining_count:
+                if processed_count_in_this_run % 5 == 0 or (current_index_in_run + 1) == total_questions:
                     current_progress_percentage = (global_index + 1) * 100 / total_questions
                     logger.info(f"进度: {global_index+1}/{total_questions} ({current_progress_percentage:.1f}%) - 本次运行已处理 {processed_count_in_this_run}")
                     try:

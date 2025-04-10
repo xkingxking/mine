@@ -9,6 +9,7 @@ from datetime import datetime
 import time # 添加 time 模块用于模拟处理时间
 import sys
 import re
+from transformer import update_task_status, TASK_STATUS
 
 # Get a logger specific to this module
 logger = logging.getLogger(__name__)
@@ -375,7 +376,28 @@ def evaluate_questions(source_file, transformed_file, output_file, progress_call
             'questions': []
         }
         
-        # 评估每个题目
+        # 检查任务是否已被取消
+        def check_if_cancelled():
+            if task_id:
+                # 读取当前任务状态
+                task_log_path = os.path.join(
+                    os.path.dirname(os.path.abspath(__file__)), 
+                    '../../logs/transformed_logs/tasks.json'
+                )
+                if os.path.exists(task_log_path):
+                    try:
+                        with open(task_log_path, 'r', encoding='utf-8') as f:
+                            tasks_data = json.load(f)
+                        if task_id in tasks_data:
+                            current_status = tasks_data[task_id].get('status')
+                            if current_status == TASK_STATUS['CANCELLED']:
+                                logger.info(f"任务 {task_id} 已被取消，中止评估")
+                                return True
+                    except Exception as e:
+                        logger.error(f"检查任务状态时出错: {e}")
+            return False
+        
+        # 迭代评估每个题目
         for i, transformed_item in enumerate(transformed_questions):
             if monitor:
                 monitor.update_progress()
@@ -402,6 +424,10 @@ def evaluate_questions(source_file, transformed_file, output_file, progress_call
             if not transformed_versions:
                 logger.warning(f"题目 {question_id} 没有变形版本，跳过评估")
                 continue
+            
+            # 检查任务是否被取消
+            if check_if_cancelled():
+                return
             
             # 构建评估 prompt
             prompt = build_prompt(original, transformed_versions)

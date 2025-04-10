@@ -16,6 +16,7 @@ import glob
 from dotenv import load_dotenv
 from collections import deque
 import numpy as np
+import time
 
 # 配置logger
 logger = logging.getLogger(__name__)
@@ -1221,6 +1222,33 @@ def delete_task_endpoint(task_id):
             task_info = tasks[task_id]
             original_status = task_info['status']
             try:
+                # 如果任务正在运行，需要先通过文件设置标记让任务停止
+                if original_status in ['transforming', 'evaluating', 'running']:
+                    app.logger.info(f"任务 {task_id} 正在运行中，尝试设置终止标记")
+                    # 导入相关函数和常量
+                    sys.path.append(os.path.join(APP_DIR, 'modules', 'transformer'))
+                    from transformer import update_task_status as transformer_update_status
+                    from transformer import TASK_STATUS as TRANSFORMER_TASK_STATUS
+                    
+                    # 设置任务状态为CANCELLED，使任务线程能够检测到并退出
+                    transformer_update_status(task_id, TRANSFORMER_TASK_STATUS['CANCELLED'], "任务被手动取消")
+                    
+                    # 等待一小段时间让任务线程有机会退出
+                    time.sleep(0.5)
+                    
+                    # 尝试释放文件锁
+                    try:
+                        lock_path = os.path.join(
+                            os.path.dirname(os.path.abspath(__file__)), 
+                            '../logs/transformed_logs/tasks.json.lock'
+                        )
+                        if os.path.exists(lock_path):
+                            app.logger.info(f"尝试删除文件锁: {lock_path}")
+                            os.remove(lock_path)
+                            app.logger.info(f"已删除文件锁: {lock_path}")
+                    except Exception as e:
+                        app.logger.error(f"删除文件锁失败: {e}", exc_info=True)
+                
                 # 尝试删除相关文件
                 transformed_file = task_info.get('transformed_file')
                 if transformed_file:
@@ -1243,7 +1271,14 @@ def delete_task_endpoint(task_id):
                     app.logger.info(f"已从等待队列中删除任务 {task_id}")
                 except ValueError:
                     pass
-                # 如果任务正在运行，不减少 running_task_count（线程结束时会处理计数器）
+                
+                # 如果任务正在运行，减少 running_task_count
+                if original_status in ['transforming', 'evaluating', 'running']:
+                    running_task_count -= 1
+                    if running_task_count < 0:
+                        running_task_count = 0
+                    app.logger.info(f"已减少运行任务计数，当前值: {running_task_count}")
+                    
                 save_tasks()
                 app.logger.info(f"Attempting to start next task after deleting {task_id}.")
                 threading.Timer(0.1, start_next_task).start()
