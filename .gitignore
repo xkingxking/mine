@@ -39,8 +39,6 @@ app/.venv/pyvenv.cfg
 *.swp
 *.swo
 
-# Environment variables
-.env
 
 # Logs
 logs/
@@ -70,5 +68,8 @@ frontend/yarn-debug.log*
 frontend/yarn-error.log*
 frontend/package-lock.json
 
-# Output directory - keep the directory but ignore its contents
-app/out/*
+
+# Tests and Models
+tests/
+models/
+

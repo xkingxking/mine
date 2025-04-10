@@ -959,7 +959,8 @@ async def evaluate_model():
                     model_output=model_output,
                     standard_answer=question.get("answer"),
                     domain=question.get("题目领域", "通用"),
-                    question_type=question.get("type", "choice")
+                    question_type=question.get("type", "choice"),
+                    difficulty=question.get("难度级别", "中等")
                 )
                 # 打印评估结果
                 print(f"\n评估结果:")

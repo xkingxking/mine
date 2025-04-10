@@ -136,17 +136,24 @@ async def process_questions(questions: List[Dict[str, Any]], args: argparse.Name
                 # 保存模型输出到问题字典中
                 question["model_output"] = model_output
                 
+                # 获取难度级别，默认为"中等"
+                difficulty = question.get("难度级别", "中等")
+                if isinstance(difficulty, str):
+                    difficulty = difficulty.strip()  # 去除可能的空格
+                
                 # 评估模型输出
                 evaluation_results = await evaluation_manager.evaluate_response(
                     model_output=model_output,
                     standard_answer=question["answer"],
                     domain=question.get("题目领域", "通用"),
-                    question_type=question.get("type", "choice")
+                    question_type=question.get("type", "choice"),
+                    difficulty=difficulty
                 )
                 
                 # 打印评估结果
                 print(f"\n评估结果:")
                 print(f"准确性分数: {evaluation_results['accuracy']['accuracy_score']}")
+                print(f"难度级别: {evaluation_results['difficulty']}")
                 print(f"是否准确: {evaluation_results['accuracy']['is_accurate']}")
                 
             except Exception as e:

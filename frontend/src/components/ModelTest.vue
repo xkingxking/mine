@@ -3,90 +3,11 @@
     <div class="header">
       <h1>模型测试</h1>
       <div class="header-actions">
-        <div class="search-box">
-          <input 
-            type="text" 
-            v-model="searchQuery" 
-            placeholder="搜索测试任务..."
-            @input="filterTests"
-          >
-          <i class="fas fa-search"></i>
-        </div>
       </div>
     </div>
 
 
-      <div class="tests-grid">
-      <div v-for="test in filteredTests" :key="test.id" class="test-card">
-        <div class="test-header">
-          <div class="test-title">
-            <h3>{{ test.name }}</h3>
-            <el-tag size="small" type="info">{{ test.model_name }}</el-tag>
-          </div>
-          <el-tag :type="getTestStatusTag(test.status)">
-            {{ getTestStatusText(test.status) }}
-          </el-tag>
-        </div>
-        <div class="test-info">
-          <div class="info-item">
-            <i class="fas fa-calendar"></i>
-            <span>创建时间：{{ formatDate(test.created_at) }}</span>
-          </div>
-          <div class="info-item">
-            <i class="fas fa-question-circle"></i>
-            <span>题目数量：{{ test.question_count }}</span>
-          </div>
-          <div class="info-item">
-            <i class="fas fa-chart-line"></i>
-            <span>完成率：{{ test.completion_rate }}%</span>
-          </div>
-          <div class="info-item">
-            <i class="fas fa-clock"></i>
-            <span>完成时间：{{ test.completed_at ? formatDate(test.completed_at) : '进行中' }}</span>
-          </div>
-        </div>
-        <div class="test-metrics" v-if="test.status === 'completed'">
-          <div class="metric-item">
-            <span class="metric-label">安全性评分</span>
-            <el-progress 
-              :percentage="test.metrics.safety_score * 100" 
-              :color="getScoreColor(test.metrics.safety_score)"
-            />
-          </div>
-          <div class="metric-item">
-            <span class="metric-label">准确性评分</span>
-            <el-progress 
-              :percentage="test.metrics.accuracy_score * 100" 
-              :color="getScoreColor(test.metrics.accuracy_score)"
-            />
-          </div>
-        </div>
-        <div class="test-actions">
-          <el-button-group>
-            <el-button size="small" @click="viewTest(test)">
-              <i class="fas fa-eye"></i> 查看详情
-            </el-button>
-            <el-button 
-              size="small" 
-              type="success" 
-              :disabled="test.status !== 'completed'"
-              @click="exportReport(test)"
-            >
-              <i class="fas fa-file-alt"></i> 导出报告
-            </el-button>
-            <el-button 
-              size="small" 
-              type="danger" 
-              :disabled="test.status === 'running'"
-              @click="deleteTest(test)"
-            >
-              <i class="fas fa-trash"></i> 删除
-            </el-button>
-          </el-button-group>
-        </div>
-      </div>
-    </div>
-
+      
      <!-- 创建测试任务表单 - 现在直接显示在界面上 -->
 <div class="create-test-section">
       <h2 class="section-title">
@@ -248,7 +169,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { fetchQuestionBanks, fetchAllBankQuestions } from '@/api/questionBank'
-import { getTestList, createTest, getTestDetail, exportTestReport, deleteTest, getModelList } from '@/api/ModelTest'
+import { createTest, getTestDetail, exportTestReport, getModelList } from '@/api/ModelTest'
 
 export default {
   name: 'ModelTest',
@@ -315,8 +236,8 @@ const getQuestionTitle = (questionId) => {
   return question ? question.title : `题目 ${questionId}`
 }
 
-    // 加载模型列表
-    const loadModels = async () => {
+// 加载模型列表
+const loadModels = async () => {
       try {
         const response = await getModelList()
         // 直接使用 response，因为 request.js 已经处理了 response.data
@@ -326,7 +247,7 @@ const getQuestionTitle = (questionId) => {
         console.error('Failed to load models:', error)
         ElMessage.error('加载模型列表失败')
       }
-    }
+}
 
     // 题库分组
     const bankGroups = computed(() => [
@@ -390,16 +311,7 @@ const getQuestionTitle = (questionId) => {
       }
     }
 
-    // 加载测试列表
-    const loadTests = async () => {
-      try {
-        const response = await getTestList()
-        tests.value = response.data
-      } catch (error) {
-        console.error('加载测试列表失败:', error)
-        ElMessage.error('加载测试列表失败')
-      }
-    }
+
 
     // 提交测试任务
     const submitTest = async () => {
@@ -441,7 +353,6 @@ const getQuestionTitle = (questionId) => {
         await createTest(testData)
         ElMessage.success('测试任务创建成功')
         resetForm()
-        await loadTests() // 刷新列表
       } catch (error) {
         console.error('创建测试失败:', error)
         ElMessage.error(error.response?.data?.detail || '测试任务创建失败')
@@ -481,31 +392,12 @@ const getQuestionTitle = (questionId) => {
       }
     }
 
-    // 删除测试
-    const deleteTest = async (test) => {
-      try {
-        await ElMessageBox.confirm('确定要删除这个测试任务吗？', '警告', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        })
-        await deleteTest(test.id)
-        ElMessage.success('删除成功')
-        await loadTests() // 刷新列表
-      } catch (error) {
-        if (error !== 'cancel') {
-          console.error('删除失败:', error)
-          ElMessage.error('删除失败')
-        }
-      }
-    }
 
     // 合并后的 onMounted
     onMounted(async () => {
       await Promise.all([
         loadModels(),
-        loadBanks(),
-        loadTests()
+        loadBanks()
       ])
       
       if (route.query.bankId) {
@@ -563,7 +455,6 @@ const getQuestionTitle = (questionId) => {
       resetForm,
       viewTest,
       exportReport,
-      deleteTest,
       submitTest,
       handleBankChange,
       selectAllQuestions,
@@ -633,34 +524,6 @@ const getQuestionTitle = (questionId) => {
   display: flex;
   gap: 1rem;
   align-items: center;
-}
-
-.search-box {
-  position: relative;
-  width: 300px;
-}
-
-.search-box input {
-  width: 100%;
-  padding: 0.8rem 1rem 0.8rem 2.5rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-}
-
-.search-box input:focus {
-  outline: none;
-  border-color: #4299e1;
-  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
-}
-
-.search-box i {
-  position: absolute;
-  left: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #a0aec0;
 }
 
 /* 新增创建测试任务区域样式 */

@@ -1,10 +1,14 @@
 from typing import Dict, Any
 from app.modules.evaluator.base_evaluator import BaseEvaluator
 import re
+from .nochoice_evaluator import EnhancedEvaluator
 
 class AccuracyEvaluator(BaseEvaluator):
     """准确性评估器，用于评估选择题答案的准确性"""
     
+    def __init__(self):
+        self.nochoice_evaluator = EnhancedEvaluator()
+        
     async def evaluate(self, model_output: str, standard_answer: str = None, question_type: str = "choice") -> Dict[str, Any]:
         """评估模型输出的准确性
         
@@ -27,6 +31,7 @@ class AccuracyEvaluator(BaseEvaluator):
                 answer_match = re.search(r'[A-D]', model_output)
                 if answer_match:
                     extracted_answer = answer_match.group()
+                    print(f"选择题评估结果:")
                     print(f"提取到的答案: {extracted_answer}")
                     is_correct = extracted_answer == standard_answer
                     print(f"答案匹配{'正确' if is_correct else '错误'}")
@@ -39,6 +44,7 @@ class AccuracyEvaluator(BaseEvaluator):
                 # 判断题评估逻辑
                 answer_match = re.search(r'(正确|错误)', model_output)
                 if answer_match:
+                    print(f"判断题评估结果:")
                     extracted_answer = answer_match.group()
                     print(f"提取到的答案: {extracted_answer}")
                     is_correct = extracted_answer == standard_answer
@@ -49,40 +55,20 @@ class AccuracyEvaluator(BaseEvaluator):
                     accuracy_score = 0.0
                     
             elif question_type == "short_answer":
-                # 简答题评估逻辑
-                # 这里需要更复杂的语义相似度评估，暂时使用简单的关键词匹配
-                keywords = standard_answer.split()
-                matched_keywords = sum(1 for keyword in keywords if keyword in model_output)
-                accuracy_score = matched_keywords / len(keywords) if keywords else 0.0
-                is_correct = accuracy_score >= 0.7  # 设置一个阈值
-                print(f"关键词匹配度: {accuracy_score:.2%}")
+                # 使用 NoChoiceEvaluator 评估简答题
+                accuracy_score, is_correct = self.nochoice_evaluator.evaluate_short_answer(model_output, standard_answer)
                 
             elif question_type == "code":
-                # 代码题评估逻辑
-                # 这里需要更复杂的代码评估，暂时使用简单的关键词匹配
-                code_keywords = ["def", "class", "import", "return", "if", "else", "for", "while"]
-                matched_keywords = sum(1 for keyword in code_keywords if keyword in model_output)
-                accuracy_score = matched_keywords / len(code_keywords)
-                is_correct = accuracy_score >= 0.7  # 设置一个阈值
-                print(f"代码关键词匹配度: {accuracy_score:.2%}")
+                # 使用 NoChoiceEvaluator 评估代码题
+                accuracy_score, is_correct = self.nochoice_evaluator.evaluate_code(model_output, standard_answer)
                 
             elif question_type == "translation":
-                # 翻译题评估逻辑
-                # 这里需要更复杂的翻译评估，暂时使用简单的关键词匹配
-                keywords = standard_answer.split()
-                matched_keywords = sum(1 for keyword in keywords if keyword in model_output)
-                accuracy_score = matched_keywords / len(keywords) if keywords else 0.0
-                is_correct = accuracy_score >= 0.7  # 设置一个阈值
-                print(f"翻译关键词匹配度: {accuracy_score:.2%}")
+                # 使用 NoChoiceEvaluator 评估翻译题
+                accuracy_score, is_correct = self.nochoice_evaluator.evaluate_translation(model_output, standard_answer)
                 
             elif question_type == "scenario":
-                # 场景题评估逻辑
-                # 这里需要更复杂的场景评估，暂时使用简单的关键词匹配
-                keywords = standard_answer.split()
-                matched_keywords = sum(1 for keyword in keywords if keyword in model_output)
-                accuracy_score = matched_keywords / len(keywords) if keywords else 0.0
-                is_correct = accuracy_score >= 0.7  # 设置一个阈值
-                print(f"场景关键词匹配度: {accuracy_score:.2%}")
+                # 使用 NoChoiceEvaluator 评估场景题
+                accuracy_score, is_correct = self.nochoice_evaluator.evaluate_scenario(model_output, standard_answer)
                 
             else:
                 print(f"未知题目类型: {question_type}")
