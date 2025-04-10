@@ -297,11 +297,27 @@ const loadModels = async () => {
       
       try {
         const questionsData = await fetchAllBankQuestions(bankId)
-        questions.value = questionsData.map(q => ({
-          id: q.id,
-          title: `${q.id} - ${q.question.substring(0, 30)}${q.question.length > 30 ? '...' : ''}`,
-          raw: q  // 保存原始题目数据
-        }))
+        const isTransformed = bankId.includes('transformed_')
+        
+        questions.value = questionsData.map(q => {
+          // 对于变形题库，使用ID和变形方法作为标题
+          let title = ''
+          if (isTransformed && q.transform_method) {
+            title = `${q.id} - (${q.transform_method})`
+          } else if (q.title) {
+            // 使用后端提供的标题
+            title = q.title
+          } else {
+            // 默认标题格式
+            title = `${q.id} - ${q.question.substring(0, 30)}${q.question.length > 30 ? '...' : ''}`
+          }
+          
+          return {
+            id: q.id,
+            title: title,
+            raw: q  // 保存原始题目数据
+          }
+        })
         
         // 默认选择所有题目
         testForm.value.questionIds = questions.value.map(q => q.id)

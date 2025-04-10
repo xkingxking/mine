@@ -606,7 +606,10 @@ const calculateCompositeDimensions = () => {
        try {
         loading.value = true;
         selectedBankName.value = bankName;
-        previewQuestions.value = await fetchBankQuestions(bankId);
+        // 对于变形题库，不限制返回数量
+        const isTransformed = bankId.includes('transformed_');
+        const limit = isTransformed ? 'all' : 5;
+        previewQuestions.value = await fetchBankQuestions(bankId, limit);
         showQuestionsDialog.value = true;
       } finally {
         loading.value = false;

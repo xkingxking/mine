@@ -692,6 +692,7 @@ def get_transformed_bank_metadata():
                 
                 # 提取必要的元数据，只保留最基本信息
                 bank = {
+                    "id": os.path.splitext(filename)[0],  # 使用文件名作为ID
                     "metadata": {
                         "total_transformed_versions": data.get("metadata", {}).get("total_transformed_versions", 0)
                     },
@@ -793,9 +794,21 @@ def get_bank_questions(bank_id):
                 # 处理变形题库的新格式
                 if 'questions' in data and isinstance(data['questions'], list):
                     # 新格式：包含原始问题和变形版本
+                    total_original = len(data['questions'])
+                    total_transformed = 0
+                    unique_questions = set()  # 用于跟踪不重复题目
+                    
                     for question_obj in data['questions']:
                         original_question = question_obj.get('original_question', {})
                         transformed_versions = question_obj.get('transformed_versions', [])
+                        
+                        # 计算总变形版本数
+                        total_transformed += len(transformed_versions)
+                        
+                        # 为原始题目创建一个唯一标识符
+                        original_id = original_question.get('id', '')
+                        if original_id and original_id not in unique_questions:
+                            unique_questions.add(original_id)
                         
                         # 添加变形版本题目
                         for version in transformed_versions:
@@ -805,7 +818,8 @@ def get_bank_questions(bank_id):
                                 "question": version.get("question", ""),
                                 "answer": version.get("answer", ""),
                                 "transform_method": version.get("transform_method", "未知"),
-                                "difficulty": version.get("difficulty", "中等")
+                                "difficulty": version.get("difficulty", "中等"),
+                                "title": f"{original_question.get('id', 'unknown')} - {version.get('transform_method', '未知变形')}" # 添加标题字段用于显示
                             }
                             
                             # 处理选项
@@ -817,6 +831,12 @@ def get_bank_questions(bank_id):
                                     transformed_question["choices"] = {chr(65 + i): opt.strip() for i, opt in enumerate(options)}
                             
                             questions.append(transformed_question)
+                    
+                    # 更新元数据
+                    if 'metadata' not in data:
+                        data['metadata'] = {}
+                    if 'total_transformed_versions' not in data['metadata']:
+                        data['metadata']['total_transformed_versions'] = total_transformed
                 else:
                     # 老式变形题库直接包含题目列表
                     for item in data:
@@ -826,7 +846,8 @@ def get_bank_questions(bank_id):
                             "question": item["question"],
                             "answer": item["answer"],
                             "transform_method": item["transform_method"],
-                            "difficulty": item["difficulty"]
+                            "difficulty": item["difficulty"],
+                            "title": f"{item.get('original_id', 'unknown')} - {item.get('transform_method', '未知变形')}" # 添加标题字段
                         }
                         if item["type"] == "choice":
                             options = item["options"].split("；") if "；" in item["options"] else item["options"].split(";")
@@ -843,7 +864,8 @@ def get_bank_questions(bank_id):
                         "answer": item["answer"],
                         "题目领域": item.get("题目领域", "无"),
                         "测试指标": item.get("测试指标", "无"),
-                        "难度级别": item.get("难度级别", "无")
+                        "难度级别": item.get("难度级别", "无"),
+                        "title": f"{item.get('id', 'unknown')} - {item.get('question', '')[:20]}..." # 为原题库添加标题字段
                     }
                     if item.get("choices"):
                         question["choices"] = item["choices"]
@@ -853,7 +875,7 @@ def get_bank_questions(bank_id):
             if is_transformed:
                 # 处理新格式的简化元数据
                 metadata = {
-                    "total_transformed_versions": data.get("metadata", {}).get("total_transformed_versions", 0),
+                    "total_transformed_versions": data.get("metadata", {}).get("total_transformed_versions", len(questions)),
                     "transformed_at": data.get("transformed_at", ""),
                     "source_file": data.get("source_file", "")
                 }

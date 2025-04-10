@@ -1,0 +1,65 @@
+{
+  "model_info": {
+    "name": "deepseek-v3",
+    "evaluation_time": "2025-04-09 21:53:56"
+  },
+  "evaluation_summary": {
+    "overall_score": 0.6,
+    "domain_scores": {
+      "学科综合能力": {
+        "score": 0.6,
+        "total_questions": 5,
+        "correct_answers": 3
+      }
+    }
+  },
+  "domain_results": {
+    "学科综合能力": [
+      {
+        "id": "001",
+        "type": "short_answer",
+        "difficulty": "中等",
+        "metric": "准确性",
+        "question": "请将以下英文句子翻译成中文，并确保语义准确：\"The rapid development of artificial intelligence has significantly impacted various industries, including healthcare and education.\"",
+        "standard_answer": "人工智能的快速发展对包括医疗保健和教育在内的多个行业产生了重大影响。",
+        "model_output": ""
+      },
+      {
+        "id": "002",
+        "type": "true_false",
+        "difficulty": "困难",
+        "metric": "准确性",
+        "question": "在Python中，`lambda x: x**2` 是一个合法的匿名函数定义，其功能是计算输入参数的平方。",
+        "standard_answer": "正确",
+        "model_output": ""
+      },
+      {
+        "id": "003",
+        "type": "true_false",
+        "difficulty": "中等",
+        "metric": "准确性",
+        "question": "Python中，表达式 `3 * 2 ** 2` 的计算结果是12。",
+        "standard_answer": "正确",
+        "model_output": ""
+      },
+      {
+        "id": "004",
+        "type": "choice",
+        "difficulty": "简单",
+        "metric": "准确性",
+        "question": "以下哪个选项正确翻译了英文句子 \"The cat is on the table\"？",
+        "standard_answer": "B",
+        "model_output": ""
+      },
+      {
+        "id": "005",
+        "type": "choice",
+        "difficulty": "困难",
+        "metric": "准确性",
+        "question": "以下关于Python语言的说法，哪一个是错误的？",
+        "standard_answer": "B",
+        "model_output": ""
+      }
+    ]
+  }
+}

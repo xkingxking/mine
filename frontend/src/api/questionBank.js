@@ -41,13 +41,27 @@ const formatTransformedBankData = (bank) => {
   // 提取变形题库的原始源题库文件名
   const sourceFileName = bank.source_file?.replace('.json', '') || 'unknown';
   
+  // 计算总题目数量，包括所有变形版本
+  let totalQuestions = 0;
+  if (bank.metadata?.total_transformed_versions) {
+    // 使用元数据中的总变形版本数
+    totalQuestions = bank.metadata.total_transformed_versions;
+  } else if (bank.questions && Array.isArray(bank.questions)) {
+    // 手动计算所有变形版本的数量
+    bank.questions.forEach(question => {
+      if (question.transformed_versions) {
+        totalQuestions += question.transformed_versions.length;
+      }
+    });
+  }
+  
   return {
     ...bank,
     id: bank.id || sourceFileName,
     name: bank.taskName ? `变形题库-${bank.taskName}` : (bank.name || `变形题库-${sourceFileName}`),
     dimensions: '变形题库',
     transform_methods: Array.from(transformMethods),
-    total: bank.questions?.length || 0,
+    total: totalQuestions, // 使用计算后的总题目数
     created_at: bank.transformed_at || bank.created_at || '未知日期',
     // 添加额外信息以适应原先需要显示这些信息的UI组件
     total_transformed_versions: bank.metadata?.total_transformed_versions || 0
@@ -91,14 +105,16 @@ export const fetchBankQuestions = async (bankId, limit = 5) => {
     const response = await api.get(`/question-banks/${bankId}/questions`);
     const questions = response.data.questions.map(formatQuestion);
     
-    // 对于变形题库，我们只返回原始问题和前N个变形版本
-    if (questions[0]?.isTransformed) {
-      return questions.slice(0, limit).flatMap(q => [
-        { ...q, isOriginal: true },
-        ...q.transformedVersions.slice(0, limit)
-      ]);
+    // 判断是否是变形题库
+    const isTransformed = bankId.includes('transformed_');
+    
+    if (isTransformed) {
+      // 对于变形题库，我们返回全部题目，但如果有limit限制则截取
+      return limit === 'all' ? questions : questions.slice(0, limit);
+    } else {
+      // 对于原始题库，保持原有逻辑
+      return limit === 'all' ? questions : questions.slice(0, limit);
     }
-    return questions.slice(0, limit);
   } catch (error) {
     console.error('Error fetching bank questions:', error);
     return [];
