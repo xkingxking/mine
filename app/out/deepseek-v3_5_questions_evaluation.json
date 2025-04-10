@@ -1,0 +1,59 @@
+{
+  "model_info": {
+    "name": "deepseek-v3",
+    "evaluation_time": "2025-04-10 23:11:04"
+  },
+  "evaluation_summary": {
+    "overall_score": 0.0,
+    "domain_scores": {}
+  },
+  "domain_results": {
+    "学科综合能力": [
+      {
+        "id": "001",
+        "type": "true_false",
+        "difficulty": "简单",
+        "metric": "准确性",
+        "question": "Python中的\"print(3 + 5)\"会输出8。",
+        "standard_answer": "正确",
+        "model_output": ""
+      },
+      {
+        "id": "002",
+        "type": "short_answer",
+        "difficulty": "中等",
+        "metric": "准确性",
+        "question": "请将以下英文句子翻译成中文，并确保语义准确：\"The rapid development of artificial intelligence has significantly impacted various industries, including healthcare, finance, and education.\"",
+        "standard_answer": "人工智能的快速发展对医疗、金融和教育等多个行业产生了重大影响。",
+        "model_output": ""
+      },
+      {
+        "id": "003",
+        "type": "true_false",
+        "difficulty": "困难",
+        "metric": "准确性",
+        "question": "在Python中，`lambda x: x ** 2` 是一个匿名函数，其功能是计算输入参数的平方。",
+        "standard_answer": "正确",
+        "model_output": ""
+      },
+      {
+        "id": "004",
+        "type": "choice",
+        "difficulty": "简单",
+        "metric": "准确性",
+        "question": "以下哪个选项是Python中用于输出内容的函数？",
+        "standard_answer": "B",
+        "model_output": ""
+      },
+      {
+        "id": "005",
+        "type": "choice",
+        "difficulty": "中等",
+        "metric": "准确性",
+        "question": "以下关于Python语言的说法，哪一个是错误的？",
+        "standard_answer": "D",
+        "model_output": ""
+      }
+    ]
+  }
+}

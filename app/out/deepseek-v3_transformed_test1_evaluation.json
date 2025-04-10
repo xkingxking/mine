@@ -1,0 +1,349 @@
+{
+  "model_info": {
+    "name": "deepseek-v3",
+    "evaluation_time": "2025-04-10 22:48:07"
+  },
+  "evaluation_summary": {
+    "overall_score": 0.7590361445783133,
+    "domain_scores": {
+      "变形题库": {
+        "score": 0.7590361445783133,
+        "total_questions": 29,
+        "correct_answers": 23,
+        "difficulty_stats": {
+          "easy": {
+            "total": 12,
+            "correct": 11
+          },
+          "medium": {
+            "total": 9,
+            "correct": 7
+          },
+          "hard": {
+            "total": 8,
+            "correct": 5
+          }
+        }
+      }
+    }
+  },
+  "domain_results": {
+    "变形题库": [
+      {
+        "id": "001",
+        "type": "true_false",
+        "difficulty": "简单",
+        "metric": "（语序调整）",
+        "question": "会输出8的是Python中的\"print(3 + 5)\"。",
+        "standard_answer": "正确",
+        "model_output": ""
+      },
+      {
+        "id": "001",
+        "type": "true_false",
+        "difficulty": "中等",
+        "metric": "（条件变化）",
+        "question": "在Python 3.9版本中，执行\"print(3 + 5)\"会输出8。",
+        "standard_answer": "正确",
+        "model_output": ""
+      },
+      {
+        "id": "001",
+        "type": "true_false",
+        "difficulty": "简单",
+        "metric": "（表达方式转换）",
+        "question": "Python代码\"print(3 + 5)\"的运行结果是8。",
+        "standard_answer": "正确",
+        "model_output": ""
+      },
+      {
+        "id": "001",
+        "type": "true_false",
+        "difficulty": "中等",
+        "metric": "（正反对比）",
+        "question": "以下哪段Python代码会输出8？A. print(3 + 5)  B. print(\"3 + 5\")",
+        "standard_answer": "A",
+        "model_output": ""
+      },
+      {
+        "id": "001",
+        "type": "true_false",
+        "difficulty": "简单",
+        "metric": "（情境补充）",
+        "question": "小明在学习Python基础时，写了代码\"print(3 + 5)\"，这段代码会输出8。",
+        "standard_answer": "正确",
+        "model_output": ""
+      },
+      {
+        "id": "001",
+        "type": "true_false",
+        "difficulty": "简单",
+        "metric": "（考点拓展）",
+        "question": "Python中的\"print(3 + 5)\"会输出什么？",
+        "standard_answer": "8",
+        "model_output": ""
+      },
+      {
+        "id": "001",
+        "type": "short_answer",
+        "difficulty": "简单",
+        "metric": "（题型更改）",
+        "question": "请写出执行后会输出8的Python代码。",
+        "standard_answer": "print(3 + 5)",
+        "model_output": ""
+      },
+      {
+        "id": "002",
+        "type": "short_answer",
+        "difficulty": "中等",
+        "metric": "（背景情境变化）",
+        "question": "在科技飞速发展的今天，人工智能技术日新月异。请将以下英文句子翻译成中文，并确保语义准确：\"The rapid development of artificial intelligence has significantly impacted various industries, including healthcare, finance, and education.\"",
+        "standard_answer": "人工智能的快速发展对医疗、金融和教育等多个行业产生了重大影响。",
+        "model_output": ""
+      },
+      {
+        "id": "002",
+        "type": "short_answer",
+        "difficulty": "困难",
+        "metric": "（限制条件调整）",
+        "question": "请将以下英文句子翻译成中文，确保语义准确且使用正式书面语风格：\"The rapid development of artificial intelligence has significantly impacted various industries, including healthcare, finance, and education.\"",
+        "standard_answer": "人工智能的迅猛发展已对包括医疗、金融及教育在内的诸多行业产生深远影响。",
+        "model_output": ""
+      },
+      {
+        "id": "002",
+        "type": "short_answer",
+        "difficulty": "中等",
+        "metric": "（开放性提示）",
+        "question": "请将以下英文句子翻译成中文，并思考人工智能发展对不同行业的具体影响方式：\"The rapid development of artificial intelligence has significantly impacted various industries, including healthcare, finance, and education.\"",
+        "standard_answer": "人工智能的快速发展对医疗、金融和教育等多个行业产生了重大影响。",
+        "model_output": ""
+      },
+      {
+        "id": "002",
+        "type": "short_answer",
+        "difficulty": "中等",
+        "metric": "（表达方式转换）",
+        "question": "如何用中文准确表达以下英文句子的含义？\"The rapid development of artificial intelligence has significantly impacted various industries, including healthcare, finance, and education.\"",
+        "standard_answer": "人工智能的快速发展对医疗、金融和教育等多个行业产生了重大影响。",
+        "model_output": ""
+      },
+      {
+        "id": "002",
+        "type": "short_answer",
+        "difficulty": "困难",
+        "metric": "（理论与实践结合）",
+        "question": "请将以下英文句子翻译成中文，并解释\"significantly impacted\"这一短语在翻译过程中的处理原则：\"The rapid development of artificial intelligence has significantly impacted various industries, including healthcare, finance, and education.\"",
+        "standard_answer": "人工智能的快速发展对医疗、金融和教育等多个行业产生了重大影响。翻译\"significantly impacted\"时，采用\"重大影响\"的译法既忠实于原文程度副词的含义，又符合中文四字短语的表达习惯，体现了翻译的准确性和可读性原则。",
+        "model_output": ""
+      },
+      {
+        "id": "002",
+        "type": "short_answer",
+        "difficulty": "中等",
+        "metric": "（考点拓展）",
+        "question": "请分析以下英文句子的句子结构，并指出主谓宾成分：\"The rapid development of artificial intelligence has significantly impacted various industries, including healthcare, finance, and education.\"",
+        "standard_answer": "主语：The rapid development of artificial intelligence；谓语：has impacted；宾语：various industries。including引导的现在分词短语作后置定语修饰industries。",
+        "model_output": ""
+      },
+      {
+        "id": "002",
+        "type": "choice",
+        "difficulty": "中等",
+        "metric": "（题型更改）",
+        "question": "以下哪个中文翻译最准确地表达了原句的含义？\"The rapid development of artificial intelligence has significantly impacted various industries, including healthcare, finance, and education.\"",
+        "standard_answer": "2",
+        "model_output": ""
+      },
+      {
+        "id": "003",
+        "type": "true_false",
+        "difficulty": "困难",
+        "metric": "（语序调整）",
+        "question": "计算输入参数的平方是Python中`lambda x: x ** 2`这个匿名函数的功能。",
+        "standard_answer": "正确",
+        "model_output": ""
+      },
+      {
+        "id": "003",
+        "type": "true_false",
+        "difficulty": "简单",
+        "metric": "（条件变化）",
+        "question": "在Python中，`lambda x: x ** 2` 是一个匿名函数。",
+        "standard_answer": "正确",
+        "model_output": ""
+      },
+      {
+        "id": "003",
+        "type": "true_false",
+        "difficulty": "困难",
+        "metric": "（表达方式转换）",
+        "question": "Python中的`lambda x: x ** 2`匿名函数用于对输入参数进行平方运算。",
+        "standard_answer": "正确",
+        "model_output": ""
+      },
+      {
+        "id": "003",
+        "type": "true_false",
+        "difficulty": "困难",
+        "metric": "（正反对比）",
+        "question": "以下哪个Python匿名函数的功能是计算输入参数的平方？A. `lambda x: x ** 2` B. `lambda x: x * 2`",
+        "standard_answer": "A",
+        "model_output": ""
+      },
+      {
+        "id": "003",
+        "type": "true_false",
+        "difficulty": "困难",
+        "metric": "（情境补充）",
+        "question": "在数据分析中，经常需要对数据进行平方运算。在Python中，`lambda x: x ** 2` 是一个匿名函数，其功能是计算输入参数的平方。",
+        "standard_answer": "正确",
+        "model_output": ""
+      },
+      {
+        "id": "003",
+        "type": "true_false",
+        "difficulty": "困难",
+        "metric": "（考点拓展）",
+        "question": "在Python中，`lambda x: x ** 2` 是一个匿名函数，请写出该函数的等效普通函数定义。",
+        "standard_answer": "def square(x): return x ** 2",
+        "model_output": ""
+      },
+      {
+        "id": "003",
+        "type": "choice",
+        "difficulty": "困难",
+        "metric": "（题型更改）",
+        "question": "在Python中，以下哪个匿名函数的功能是计算输入参数的平方？",
+        "standard_answer": "B",
+        "model_output": ""
+      },
+      {
+        "id": "004",
+        "type": "choice",
+        "difficulty": "简单",
+        "metric": "（问题重述）",
+        "question": "在Python编程中，如果想在屏幕上显示信息，应该使用哪个函数？",
+        "standard_answer": "B",
+        "model_output": ""
+      },
+      {
+        "id": "004",
+        "type": "choice",
+        "difficulty": "简单",
+        "metric": "（选项细化）",
+        "question": "以下哪个选项是Python中用于输出内容的函数？",
+        "standard_answer": "B",
+        "model_output": ""
+      },
+      {
+        "id": "004",
+        "type": "choice",
+        "difficulty": "简单",
+        "metric": "（情境嵌入）",
+        "question": "小明正在学习Python编程，他想要在屏幕上显示“Hello, World!”，应该使用哪个函数？",
+        "standard_answer": "B",
+        "model_output": ""
+      },
+      {
+        "id": "004",
+        "type": "choice",
+        "difficulty": "中等",
+        "metric": "（难度调整）",
+        "question": "以下哪个选项是Python中用于输出内容的函数，并且可以接受多个参数并用分隔符连接？",
+        "standard_answer": "B",
+        "model_output": ""
+      },
+      {
+        "id": "004",
+        "type": "choice",
+        "difficulty": "简单",
+        "metric": "（增加干扰）",
+        "question": "以下哪个选项是Python中用于输出内容的函数？",
+        "standard_answer": "B",
+        "model_output": ""
+      },
+      {
+        "id": "004",
+        "type": "choice",
+        "difficulty": "简单",
+        "metric": "（考点拓展）",
+        "question": "在Python中，哪个函数可以用于将多个字符串连接并输出到屏幕？",
+        "standard_answer": "B",
+        "model_output": ""
+      },
+      {
+        "id": "004",
+        "type": "short_answer",
+        "difficulty": "简单",
+        "metric": "（题型更改）",
+        "question": "请写出Python中用于输出内容的函数名称。",
+        "standard_answer": "print",
+        "model_output": ""
+      },
+      {
+        "id": "005",
+        "type": "choice",
+        "difficulty": "中等",
+        "metric": "（问题重述）",
+        "question": "关于Python语言的特性，下列哪一项描述是不正确的？",
+        "standard_answer": "D",
+        "model_output": ""
+      },
+      {
+        "id": "005",
+        "type": "choice",
+        "difficulty": "中等",
+        "metric": "（选项细化）",
+        "question": "以下关于Python语言的说法，哪一个是错误的？",
+        "standard_answer": "D",
+        "model_output": ""
+      },
+      {
+        "id": "005",
+        "type": "choice",
+        "difficulty": "中等",
+        "metric": "（情境嵌入）",
+        "question": "某数据分析师在Python培训课上听到以下说法，其中错误的是？",
+        "standard_answer": "D",
+        "model_output": ""
+      },
+      {
+        "id": "005",
+        "type": "choice",
+        "difficulty": "困难",
+        "metric": "（难度调整）",
+        "question": "关于Python类型系统的深层特性，以下说法错误的是？",
+        "standard_answer": "D",
+        "model_output": ""
+      },
+      {
+        "id": "005",
+        "type": "choice",
+        "difficulty": "中等",
+        "metric": "（增加干扰）",
+        "question": "以下关于Python语言的说法，哪一个是错误的？",
+        "standard_answer": "D",
+        "model_output": ""
+      },
+      {
+        "id": "005",
+        "type": "choice",
+        "difficulty": "中等",
+        "metric": "（考点拓展）",
+        "question": "以下Python代码的执行结果是什么？\n```python\na = (1, [2, 3])\na[1].append(4)\nprint(a)\n```",
+        "standard_answer": "B",
+        "model_output": ""
+      },
+      {
+        "id": "005",
+        "type": "true_false",
+        "difficulty": "中等",
+        "metric": "（题型更改）",
+        "question": "判断正误：Python变量使用前需要通过类似\"int x=1\"的语法显式声明类型。",
+        "standard_answer": "False",
+        "model_output": ""
+      }
+    ]
+  }
+}

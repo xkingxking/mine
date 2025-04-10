@@ -44,7 +44,7 @@ async def get_model_output(question: str, model_name: str, proxy: str = None) ->
             },
             "deepseek-v3": {
                 "api_key": os.getenv('DEEPSEEK_API_KEY'),
-                "model_name": os.getenv('DEEPSEEK_MODEL_NAME', 'doubao-1.5-pro-32k-250115'),
+                "model_name": os.getenv('DEEPSEEK_MODEL_NAME', 'deepseek-v3'),
                 "api_base": os.getenv('DEEPSEEK_API_BASE', 'https://api.deepseek.com/v1')
             },
             "doubao-1.5-pro-32k": {

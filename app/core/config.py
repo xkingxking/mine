@@ -48,7 +48,7 @@ class Settings(BaseSettings):
 
     
     # API基础URL
-    DEEPSEEK_API_BASE: str = "https://api.deepseek.com/v1"
+    DEEPSEEK_API_BASE: str = "https://api.deepseek.com"
     OPENAI_API_BASE: str = "https://api.openai.com/v1"
     GEMINI_API_BASE: str = "https://generativelanguage.googleapis.com/v1"
     DOUBAO_API_BASE: str = "https://ark.cn-beijing.volces.com/api/v3"
