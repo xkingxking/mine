@@ -160,16 +160,38 @@
           </el-button>
         </el-form-item>
       </el-form>
+
+      <!-- 添加实时日志显示区域 -->
+      <div class="log-container" v-if="showLogs">
+        <div class="log-header">
+          <h3>实时日志</h3>
+          <el-button 
+            type="text" 
+            @click="showLogs = false"
+            class="close-log-btn"
+          >
+            <i class="fas fa-times"></i>
+          </el-button>
+        </div>
+        <div class="log-content" ref="logContent">
+          <div v-for="(log, index) in logs" :key="index" :class="['log-item', log.level.toLowerCase()]">
+            <span class="timestamp">{{ log.timestamp }}</span>
+            <span class="level">{{ log.level }}</span>
+            <span class="message">{{ log.message }}</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { fetchQuestionBanks, fetchAllBankQuestions } from '@/api/questionBank'
 import { createTest, getTestDetail, exportTestReport, getModelList } from '@/api/ModelTest'
+import { io } from 'socket.io-client'
 
 export default {
   name: 'ModelTest',
@@ -182,6 +204,10 @@ export default {
     const baseBanks = ref([])
     const transformedBanks = ref([])
     const loading = ref(false)
+    const logs = ref([])
+    const logContent = ref(null)
+    const socket = ref(null)
+    const showLogs = ref(false)
 
     const testForm = ref({
       name: '',
@@ -327,8 +353,6 @@ const loadModels = async () => {
       }
     }
 
-
-
     // 提交测试任务
     const submitTest = async () => {
       if (!testForm.value.name) {
@@ -349,7 +373,52 @@ const loadModels = async () => {
       }
       
       try {
-        loading.value = true  // 开始加载
+        loading.value = true
+        showLogs.value = true  // 显示日志区域
+        logs.value = [] // 清空之前的日志
+        
+        // 如果已有连接，先关闭
+        if (socket.value) {
+          socket.value.disconnect()
+        }
+        
+        // 建立新的 WebSocket 连接
+        socket.value = io('http://localhost:5000', {
+          transports: ['websocket', 'polling'],
+          reconnection: false
+        })
+        
+        // 监听日志消息
+        socket.value.on('log', (data) => {
+          logs.value.push(data)
+          nextTick(() => {
+            if (logContent.value) {
+              logContent.value.scrollTop = logContent.value.scrollHeight
+            }
+          })
+        })
+        
+        // 监听评估结果
+        socket.value.on('evaluation_result', (data) => {
+          const logMessage = `问题 ${data.question_id} 评估结果：
+          问题: ${data.question}
+          模型回答: ${data.model_output}
+          准确性分数: ${data.accuracy_score.toFixed(2)}
+          是否准确: ${data.is_accurate ? '是' : '否'}`
+
+          logs.value.push({
+            timestamp: formatDate(new Date()),
+            level: 'INFO',
+            message: logMessage
+          })
+          nextTick(() => {
+            if (logContent.value) {
+              logContent.value.scrollTop = logContent.value.scrollHeight
+            }
+          })
+        })
+        
+
         // 准备测试数据
         const selectedQuestions = questions.value
           .filter(q => testForm.value.questionIds.includes(q.id))
@@ -368,12 +437,14 @@ const loadModels = async () => {
         
         await createTest(testData)
         ElMessage.success('测试任务创建成功')
-        resetForm()
       } catch (error) {
         console.error('创建测试失败:', error)
         ElMessage.error(error.response?.data?.detail || '测试任务创建失败')
       } finally {
-        loading.value = false  // 结束加载
+        loading.value = false
+        if (socket.value) {
+          socket.value.disconnect()
+        }
       }
     }
 
@@ -419,6 +490,12 @@ const loadModels = async () => {
       if (route.query.bankId) {
         testForm.value.bankId = route.query.bankId
         await handleBankChange(route.query.bankId)
+      }
+    })
+
+    onUnmounted(() => {
+      if (socket.value) {
+        socket.value.disconnect()
       }
     })
 
@@ -468,6 +545,8 @@ const loadModels = async () => {
       testForm,
       bankGroups,
       loading,
+      logs,
+      logContent,
       resetForm,
       viewTest,
       exportReport,
@@ -480,7 +559,8 @@ const loadModels = async () => {
       getScoreColor,
       formatDate,
       removeQuestion,
-      getQuestionTitle
+      getQuestionTitle,
+      showLogs
     }
   }
 }
@@ -699,4 +779,139 @@ const loadModels = async () => {
   z-index: -1;
 }
 
+/* 日志头部样式 */
+.log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.close-log-btn {
+  padding: 4px;
+  font-size: 16px;
+  color: #909399;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.close-log-btn:hover {
+  color: #f56c6c;
+}
+
+/* 调整日志容器样式 */
+.log-container {
+  margin-top: 20px;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.log-container h3 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+
+.log-content {
+  height: 400px;
+  overflow-y: auto;
+  background-color: #fff;
+  padding: 15px;
+  border: 1px solid #ebeef5;
+  border-radius: 6px;
+  font-family: 'Consolas', 'Monaco', monospace;
+}
+
+.log-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.log-content::-webkit-scrollbar-thumb {
+  background-color: #dcdfe6;
+  border-radius: 3px;
+}
+
+.log-content::-webkit-scrollbar-track {
+  background-color: #f5f7fa;
+}
+
+.log-item {
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  font-size: 13px;
+  line-height: 1.5;
+  transition: background-color 0.3s;
+  white-space: pre-line;  
+}
+
+.log-item:hover {
+  background-color: #f5f7fa;
+}
+
+.timestamp {
+  color: #909399;
+  margin-right: 12px;
+  font-size: 12px;
+}
+
+.level {
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 3px;
+  margin-right: 12px;
+  font-size: 12px;
+}
+
+.info {
+  color: #409eff;
+  background-color: #ecf5ff;
+}
+
+.error {
+  color: #f56c6c;
+  background-color: #fef0f0;
+}
+
+.warning {
+  color: #e6a23c;
+  background-color: #fdf6ec;
+}
+
+.debug {
+  color: #909399;
+  background-color: #f4f4f5;
+}
+
+.message {
+  color: #606266;
+  word-break: break-all;
+}
+
+/* 添加日志项之间的分隔线 */
+.log-item:not(:last-child) {
+  border-bottom: 1px solid #ebeef5;
+}
+
+/* 添加日志项内部的间距 */
+.log-item > * {
+  margin-right: 8px;
+}
+
+/* 添加日志项内部的垂直对齐 */
+.log-item {
+  display: flex;
+  align-items: center;
+}
+
+/* 添加日志项内部的弹性布局 */
+.log-item .message {
+  flex: 1;
+}
 </style> 

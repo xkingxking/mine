@@ -154,7 +154,7 @@ class EvaluationManager:
                 }
             }
     
-    def get_evaluation_summary(self) -> Dict[str, Any]:
+    def  get_evaluation_summary(self) -> Dict[str, Any]:
         """获取评估摘要
         
         Returns:

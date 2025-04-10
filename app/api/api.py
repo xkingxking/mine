@@ -8,6 +8,17 @@ from datetime import datetime
 import subprocess
 import re
 import sys
+from flask_socketio import SocketIO, emit
+import asyncio
+import logging
+from logging.handlers import RotatingFileHandler
+import glob
+from dotenv import load_dotenv
+from collections import deque
+import numpy as np
+
+# 配置logger
+logger = logging.getLogger(__name__)
 
 # 添加项目根目录到 Python 路径
 root_dir = Path(__file__).parent.parent
@@ -30,6 +41,8 @@ from app.core.config import settings
 from app.main import get_model_output
 
 app = Flask(__name__)
+socketio = SocketIO(app, cors_allowed_origins="*")
+
 # 配置 CORS
 CORS(app, resources={
     r"/api/*": {
@@ -957,7 +970,6 @@ def generate_question_bank():
 # --- 模型评估相关路由 ---
 @app.route('/api/v1/evaluate', methods=['POST'])
 async def evaluate_model():
-    """评估模型接口"""
     try:
         data = request.json
         model_name = data.get('model_name')
@@ -965,38 +977,45 @@ async def evaluate_model():
         questions = data.get('questions', [])
         parameters = data.get('parameters', {})
         proxy = data.get('proxy')
-        if not model_name:
-            return jsonify({"error": "缺少 model_name"}), 400
-        if not questions:
-            return jsonify({"error": "缺少 questions"}), 400
-        # 创建评估管理器
+        
+        if not model_name or not questions:
+            return jsonify({"error": "缺少必要参数"}), 400
+            
         evaluation_manager = EvaluationManager()
-        # 处理每个问题
+        logger.info(f"开始评估，共 {len(questions)} 个问题")
+        
         for question in questions:
             try:
-                # 获取模型输出
                 model_output = await get_model_output(question, model_name, proxy)
-                # 评估回答
-                evaluation_results = await evaluation_manager.evaluate_response(
+                logger.info(f"处理问题: {question.get('id', 'unknown')}")
+                
+                evaluation_results = await evaluate_response(
                     model_output=model_output,
                     standard_answer=question.get("answer"),
+                    difficulty=question.get("难度级别", "中等"),
                     domain=question.get("题目领域", "通用"),
-                    question_type=question.get("type", "choice"),
-                    difficulty=question.get("难度级别", "中等")
+                    question_type=question.get("type", "choice")
                 )
-                # 打印评估结果
-                print(f"\n评估结果:")
-                print(f"准确性分数: {evaluation_results['accuracy']['accuracy_score']}")
-                print(f"是否准确: {evaluation_results['accuracy']['is_accurate']}")
+                
+                logger.info(f"问题评估结果: {evaluation_results}")
+                
+                # 确保发送到前端的数据已经转换
+                socketio.emit('evaluation_result', {
+                    'question_id': question.get('id', 'unknown'),
+                    'question': question.get('question', ''),
+                    'model_output': model_output,
+                    'accuracy_score': float(evaluation_results['accuracy']['accuracy_score']),
+                    'is_accurate': bool(evaluation_results['accuracy']['is_accurate'])
+                })
+                
             except Exception as e:
-                print(f"处理问题时出错: {str(e)}")
+                logger.error(f"处理问题时出错: {str(e)}")
                 continue
+                
         # 获取评估摘要
         evaluation_summary = evaluation_manager.get_evaluation_summary()
-        print("\n=== 评估摘要 ===")
-        print(f"总体得分: {evaluation_summary['overall_score']:.2%}")
-        for domain, scores in evaluation_summary["domain_scores"].items():
-            print(f"{domain}得分: {scores['score']:.2%} ({scores['correct_answers']}/{scores['total_questions']})")
+        logger.info(f"评估摘要: {evaluation_summary}")
+        
         # 生成报告
         report_generator = ReportGenerator(settings.OUTPUT_DIR)
         report = report_generator.generate_report(
@@ -1004,13 +1023,18 @@ async def evaluate_model():
             model_name=model_name,
             questions=questions
         )
+        
         # 保存报告
         report_path = report_generator.save_report(report, model_name, dataset_path)
+        logger.info(f"报告已保存: {report_path}")
+        
         return jsonify({
             "status": "success",
             "report_path": str(report_path)
         })
+        
     except Exception as e:
+        logger.error(f"评估过程出错: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -1421,6 +1445,46 @@ def serve_result_file(filename):
         return send_from_directory(directory, filename, as_attachment=False)
     except FileNotFoundError:
         return jsonify({'status': 'error', 'message': '文件未找到'}), 404
+
+
+@socketio.on('connect')
+def handle_connect():
+    logging.info('客户端已连接')
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    logging.info('客户端已断开连接')
+
+
+def evaluate_response(model_output, standard_answer, difficulty="中等", domain="通用", question_type="choice"):
+    try:
+        evaluation_manager = EvaluationManager()
+        result = evaluation_manager.evaluate_response(
+            model_output=model_output,
+            standard_answer=standard_answer,
+            difficulty=difficulty,
+            domain=domain,
+            question_type=question_type
+        )
+        
+        # 转换所有数值类型
+        if isinstance(result, dict):
+            for key, value in result.items():
+                if isinstance(value, (np.float32, np.float64)):
+                    result[key] = float(value)
+                elif isinstance(value, dict):
+                    for sub_key, sub_value in value.items():
+                        if isinstance(sub_value, (np.float32, np.float64)):
+                            result[key][sub_key] = float(sub_value)
+                        elif isinstance(sub_value, dict):
+                            for sub_sub_key, sub_sub_value in sub_value.items():
+                                if isinstance(sub_sub_value, (np.float32, np.float64)):
+                                    result[key][sub_key][sub_sub_key] = float(sub_sub_value)
+        
+        return result
+    except Exception as e:
+        logger.error(f"处理问题时出错: {str(e)}")
+        raise
 
 
 if __name__ == '__main__':
