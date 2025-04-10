@@ -212,10 +212,10 @@
       
       const getScoreColor = (score) => {
         if (score === undefined || score === null) return '#C0C4CC';
-        if (score >= 0.9) return '#67C23A'; // 优秀 - 绿色
-        if (score >= 0.7) return '#409EFF'; // 良好 - 蓝色
-        if (score >= 0.6) return '#E6A23C'; // 及格 - 黄色
-        return '#F56C6C'; // 不及格 - 红色
+        if (score >= 0.9) return '#67C23A';  // 优秀 - 绿色
+        if (score >= 0.8) return '#409EFF';  // 良好 - 蓝色
+        if (score >= 0.6) return '#E6A23C';  // 及格 - 黄色
+        return '#F56C6C';  // 不及格 - 红色
       };
       
       // 显示领域详情
@@ -257,13 +257,15 @@
         
         // 准备数据
         const domainNames = props.content.domains.map(d => d.name);
-        const domainScores = props.content.domains.map(d => d.average_score * 100); // 转换为百分比
+        const domainScores = props.content.domains.map(d => (d.average_score * 100).toFixed(2)); // 转换为百分比并保留2位小数
         
         // 设置图表选项
         const option = {
           tooltip: {
             trigger: 'axis',
-            formatter: '{b}: {c}%'
+            formatter: (params) => {
+              return `${params[0].name}: ${params[0].value}%`;
+            }
           },
           grid: {
             left: '3%',
@@ -314,6 +316,92 @@
         window.addEventListener('resize', () => {
           if (domainChart) {
             domainChart.resize();
+          }
+        });
+      };
+      
+      // 初始化历史得分走势图
+      const initHistoryChart = () => {
+        if (!historyChartContainer.value || !selectedDomain.value) return;
+        
+        // 如果已经存在图表实例，先销毁
+        if (historyChart) {
+          historyChart.dispose();
+        }
+        
+        // 创建新的图表实例
+        historyChart = echarts.init(historyChartContainer.value);
+        
+        // 准备数据
+        const timestamps = selectedDomain.value.scores.map(s => formatTimestamp(s.timestamp));
+        const scores = selectedDomain.value.scores.map(s => s.score * 100); // 转换为百分比
+        
+        // 设置图表选项
+        const option = {
+          title: {
+            text: `${selectedDomain.value.name} 得分走势`,
+            left: 'center'
+          },
+          tooltip: {
+            trigger: 'axis',
+            formatter: '{b}<br/>{a}: {c}%'
+          },
+          grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '8%',
+            containLabel: true
+          },
+          xAxis: {
+            type: 'category',
+            data: timestamps,
+            axisLabel: {
+              interval: 0,
+              rotate: 30
+            }
+          },
+          yAxis: {
+            type: 'value',
+            min: 0,
+            max: 100,
+            axisLabel: {
+              formatter: '{value}%'
+            }
+          },
+          series: [
+            {
+              name: '得分',
+              type: 'line',
+              data: scores,
+              smooth: true,
+              markLine: {
+                data: [
+                  { type: 'average', name: '平均值' }
+                ]
+              },
+              itemStyle: {
+                color: '#409EFF'
+              }
+            }
+          ]
+        };
+        
+        // 应用选项
+        historyChart.setOption(option);
+        
+        // 添加对话框关闭时的调整
+        const handleDialogClose = () => {
+          setTimeout(() => {
+            if (historyChart) {
+              historyChart.resize();
+            }
+          }, 300);
+        };
+        
+        // 监听对话框关闭事件
+        watch(showDetailDialog, (newVal) => {
+          if (!newVal) {
+            handleDialogClose();
           }
         });
       };
@@ -513,89 +601,3 @@
     }
   }
   </style>
-      
-      // 初始化历史得分走势图
-      const initHistoryChart = () => {
-        if (!historyChartContainer.value || !selectedDomain.value) return;
-        
-        // 如果已经存在图表实例，先销毁
-        if (historyChart) {
-          historyChart.dispose();
-        }
-        
-        // 创建新的图表实例
-        historyChart = echarts.init(historyChartContainer.value);
-        
-        // 准备数据
-        const timestamps = selectedDomain.value.scores.map(s => formatTimestamp(s.timestamp));
-        const scores = selectedDomain.value.scores.map(s => s.score * 100); // 转换为百分比
-        
-        // 设置图表选项
-        const option = {
-          title: {
-            text: `${selectedDomain.value.name} 得分走势`,
-            left: 'center'
-          },
-          tooltip: {
-            trigger: 'axis',
-            formatter: '{b}<br/>{a}: {c}%'
-          },
-          grid: {
-            left: '3%',
-            right: '4%',
-            bottom: '8%',
-            containLabel: true
-          },
-          xAxis: {
-            type: 'category',
-            data: timestamps,
-            axisLabel: {
-              interval: 0,
-              rotate: 30
-            }
-          },
-          yAxis: {
-            type: 'value',
-            min: 0,
-            max: 100,
-            axisLabel: {
-              formatter: '{value}%'
-            }
-          },
-          series: [
-            {
-              name: '得分',
-              type: 'line',
-              data: scores,
-              smooth: true,
-              markLine: {
-                data: [
-                  { type: 'average', name: '平均值' }
-                ]
-              },
-              itemStyle: {
-                color: '#409EFF'
-              }
-            }
-          ]
-        };
-        
-        // 应用选项
-        historyChart.setOption(option);
-        
-        // 添加对话框关闭时的调整
-        const handleDialogClose = () => {
-          setTimeout(() => {
-            if (historyChart) {
-              historyChart.resize();
-            }
-          }, 300);
-        };
-        
-        // 监听对话框关闭事件
-        watch(showDetailDialog, (newVal) => {
-          if (!newVal) {
-            handleDialogClose();
-          }
-        });
-      };
