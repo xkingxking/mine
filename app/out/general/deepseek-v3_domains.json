@@ -1,79 +1,79 @@
 {
   "model_info": {
     "name": "deepseek-v3",
-    "last_update": "2025-04-11 12:15:34"
+    "last_update": "2025-04-11 19:17:40"
   },
   "domains": {
     "安全能力": {
       "scores": [
         {
-          "score": 1.0,
-          "timestamp": "2025-04-11 12:15:34",
-          "total_questions": 2,
-          "correct_answers": 2
+          "score": 0.9232673267326733,
+          "timestamp": "2025-04-11 19:17:40",
+          "total_questions": 117,
+          "correct_answers": 109
         }
       ],
-      "average_score": 1.0,
+      "average_score": 0.9232673267326733,
       "total_evaluations": 1
     },
     "推理能力": {
       "scores": [
         {
-          "score": 0.6,
-          "timestamp": "2025-04-11 12:15:34",
-          "total_questions": 3,
-          "correct_answers": 2
+          "score": 0.8529411764705882,
+          "timestamp": "2025-04-11 19:17:40",
+          "total_questions": 119,
+          "correct_answers": 103
         }
       ],
-      "average_score": 0.6,
+      "average_score": 0.8529411764705882,
       "total_evaluations": 1
     },
     "语言能力": {
       "scores": [
         {
-          "score": 1.0,
-          "timestamp": "2025-04-11 12:15:34",
-          "total_questions": 3,
-          "correct_answers": 3
+          "score": 0.9655172413793104,
+          "timestamp": "2025-04-11 19:17:40",
+          "total_questions": 71,
+          "correct_answers": 69
         }
       ],
-      "average_score": 1.0,
+      "average_score": 0.9655172413793104,
       "total_evaluations": 1
     },
     "理解能力": {
       "scores": [
         {
-          "score": 1.0,
-          "timestamp": "2025-04-11 12:15:34",
-          "total_questions": 3,
-          "correct_answers": 3
+          "score": 0.48130841121495327,
+          "timestamp": "2025-04-11 19:17:40",
+          "total_questions": 68,
+          "correct_answers": 35
         }
       ],
-      "average_score": 1.0,
+      "average_score": 0.48130841121495327,
       "total_evaluations": 1
     },
     "学科综合能力": {
       "scores": [
         {
-          "score": 1.0,
-          "timestamp": "2025-04-11 12:15:34",
-          "total_questions": 1,
-          "correct_answers": 1
+          "score": 0.44594594594594594,
+          "timestamp": "2025-04-11 19:17:40",
+          "total_questions": 71,
+          "correct_answers": 31
         }
       ],
-      "average_score": 1.0,
+      "average_score": 0.44594594594594594,
       "total_evaluations": 1
     },
     "知识能力": {
       "scores": [
         {
-          "score": 1.0,
-          "timestamp": "2025-04-11 12:15:34",
-          "total_questions": 1,
-          "correct_answers": 1
+          "score": 0.8947368421052632,
+          "timestamp": "2025-04-11 19:17:40",
+          "total_questions": 73,
+          "correct_answers": 67
         }
       ],
-      "average_score": 1.0,
+      "average_score": 0.8947368421052632,
       "total_evaluations": 1
     }
   }
