@@ -400,11 +400,20 @@ const loadModels = async () => {
         
         // 监听评估结果
         socket.value.on('evaluation_result', (data) => {
-          const logMessage = `问题 ${data.question_id} 评估结果：
-          问题: ${data.question}
-          模型回答: ${data.model_output}
-          准确性分数: ${data.accuracy_score.toFixed(2)}
-          是否准确: ${data.is_accurate ? '是' : '否'}`
+          let logMessage = `问题 ${data.question_id} 评估结果：\n`;
+          logMessage += `问题: ${data.question}\n`;
+          
+          // 如果有选项，显示选项
+          if (data.choices) {
+            logMessage += '选项:\n';
+            for (const [key, value] of Object.entries(data.choices)) {
+              logMessage += `${key}. ${value}\n`;
+            }
+          }
+          
+          logMessage += `模型回答: ${data.model_output}\n`;
+          logMessage += `准确性分数: ${data.accuracy_score.toFixed(2)}\n`;
+          logMessage += `是否准确: ${data.is_accurate ? '是' : '否'}`;
 
           logs.value.push({
             timestamp: formatDate(new Date()),

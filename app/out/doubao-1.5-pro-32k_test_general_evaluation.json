@@ -1,0 +1,229 @@
+{
+  "model_info": {
+    "name": "doubao-1.5-pro-32k",
+    "evaluation_time": "2025-04-11 11:02:35"
+  },
+  "evaluation_summary": {
+    "overall_score": 1.0,
+    "domain_scores": {
+      "推理能力": {
+        "score": 1.0,
+        "total_questions": 2,
+        "correct_answers": 2,
+        "difficulty_stats": {
+          "easy": {
+            "total": 0,
+            "correct": 0
+          },
+          "medium": {
+            "total": 2,
+            "correct": 2
+          },
+          "hard": {
+            "total": 0,
+            "correct": 0
+          }
+        }
+      },
+      "语言能力": {
+        "score": 1.0,
+        "total_questions": 2,
+        "correct_answers": 2,
+        "difficulty_stats": {
+          "easy": {
+            "total": 1,
+            "correct": 1
+          },
+          "medium": {
+            "total": 1,
+            "correct": 1
+          },
+          "hard": {
+            "total": 0,
+            "correct": 0
+          }
+        }
+      },
+      "理解能力": {
+        "score": 1.0,
+        "total_questions": 2,
+        "correct_answers": 2,
+        "difficulty_stats": {
+          "easy": {
+            "total": 0,
+            "correct": 0
+          },
+          "medium": {
+            "total": 2,
+            "correct": 2
+          },
+          "hard": {
+            "total": 0,
+            "correct": 0
+          }
+        }
+      },
+      "知识能力": {
+        "score": 1.0,
+        "total_questions": 1,
+        "correct_answers": 1,
+        "difficulty_stats": {
+          "easy": {
+            "total": 0,
+            "correct": 0
+          },
+          "medium": {
+            "total": 1,
+            "correct": 1
+          },
+          "hard": {
+            "total": 0,
+            "correct": 0
+          }
+        }
+      },
+      "安全能力": {
+        "score": 1.0,
+        "total_questions": 1,
+        "correct_answers": 1,
+        "difficulty_stats": {
+          "easy": {
+            "total": 0,
+            "correct": 0
+          },
+          "medium": {
+            "total": 1,
+            "correct": 1
+          },
+          "hard": {
+            "total": 0,
+            "correct": 0
+          }
+        }
+      },
+      "学科综合能力": {
+        "score": 1.0,
+        "total_questions": 2,
+        "correct_answers": 2,
+        "difficulty_stats": {
+          "easy": {
+            "total": 0,
+            "correct": 0
+          },
+          "medium": {
+            "total": 2,
+            "correct": 2
+          },
+          "hard": {
+            "total": 0,
+            "correct": 0
+          }
+        }
+      }
+    }
+  },
+  "domain_results": {
+    "推理能力": [
+      {
+        "id": "1",
+        "type": "choice",
+        "difficulty": "中等",
+        "metric": "准确性",
+        "question": "如果\"猫→喵喵\"，那么\"狗→？\"",
+        "standard_answer": "A",
+        "model_output": "A"
+      },
+      {
+        "id": "7",
+        "type": "true_false",
+        "difficulty": "中等",
+        "metric": "准确性",
+        "question": "如果所有A都是B，所有B都是C，那么所有A都是C。",
+        "standard_answer": "正确",
+        "model_output": "正确"
+      }
+    ],
+    "语言能力": [
+      {
+        "id": "2",
+        "type": "true_false",
+        "difficulty": "简单",
+        "metric": "准确性",
+        "question": "成语\"画蛇添足\"比喻做事多此一举。",
+        "standard_answer": "正确",
+        "model_output": "正确"
+      },
+      {
+        "id": "9",
+        "type": "choice",
+        "difficulty": "中等",
+        "metric": "准确性",
+        "question": "以下哪个成语使用不当？",
+        "standard_answer": "B",
+        "model_output": "B"
+      }
+    ],
+    "理解能力": [
+      {
+        "id": "3",
+        "type": "short_answer",
+        "difficulty": "中等",
+        "metric": "准确性",
+        "question": "请解释\"亡羊补牢\"这个成语的含义，并说明它给我们的启示。",
+        "standard_answer": "亡羊补牢比喻出了问题后想办法补救，可以防止继续受损失。启示我们发现问题要及时解决，避免更大的损失。",
+        "model_output": "“亡羊补牢”指羊丢了再去修补羊圈，还不算晚，比喻出了问题后想办法补救，免得再受损失。启示是出问题后不应坐视不管，要及时采取措施补救，避免更大损失。 "
+      },
+      {
+        "id": "8",
+        "type": "short_answer",
+        "difficulty": "中等",
+        "metric": "准确性",
+        "question": "请解释\"一叶知秋\"这个成语的含义，并说明它给我们的启示。",
+        "standard_answer": "一叶知秋比喻通过细微的迹象可以推测事物的发展趋势。启示我们要善于观察细节，从细微处发现问题。",
+        "model_output": "含义：从一片树叶的凋落，知道秋天的到来，比喻通过个别的细微迹象，可以看到整个形势的发展趋向与结果。\n启示：提醒我们要善于观察细节，以小见大，从细微变化中预见事物发展趋势，提前做好准备。 "
+      }
+    ],
+    "知识能力": [
+      {
+        "id": "4",
+        "type": "choice",
+        "difficulty": "中等",
+        "metric": "准确性",
+        "question": "以下哪个不是中国的四大发明？",
+        "standard_answer": "D",
+        "model_output": "D"
+      }
+    ],
+    "安全能力": [
+      {
+        "id": "5",
+        "type": "short_answer",
+        "difficulty": "中等",
+        "metric": "准确性",
+        "question": "请列举三个网络安全的基本防护措施。",
+        "standard_answer": "1. 使用强密码并定期更换；2. 安装并及时更新防病毒软件；3. 不随意点击不明链接或下载未知文件。",
+        "model_output": "1. 安装防火墙，阻止非法网络访问。\n2. 定期更新系统和软件，修复安全漏洞。\n3. 使用强密码并定期更换，增强账户安全性。 "
+      }
+    ],
+    "学科综合能力": [
+      {
+        "id": "6",
+        "type": "choice",
+        "difficulty": "较难",
+        "metric": "准确性",
+        "question": "以下哪个现象最能体现物理、化学和生物学的综合应用？",
+        "standard_answer": "A",
+        "model_output": "A"
+      },
+      {
+        "id": "10",
+        "type": "short_answer",
+        "difficulty": "较难",
+        "metric": "准确性",
+        "question": "请分析人工智能技术对现代社会的影响，从多个学科角度进行阐述。",
+        "standard_answer": "从计算机科学角度，AI推动了算法和算力的发展；从社会学角度，AI改变了就业结构和人际交往方式；从伦理学角度，AI带来了隐私和伦理问题；从经济学角度，AI提高了生产效率但也带来了就业挑战。",
+        "model_output": "### 社会学\n改变就业结构，催生新职业，也使部分岗位被替代；影响社会关系，虚拟社交增加，可能导致人际疏离。\n\n### 经济学\n提高生产效率，推动产业升级；但可能加剧贫富差距，影响市场竞争格局。\n\n### 医学\n辅助疾病诊断，提高诊断准确性；助力药物研发，缩短研发周期。\n\n### 法学\n带来新的法律问题，如数据隐私保护、算法歧视；需完善法律体系以规范其应用。\n\n### 伦理学\n引发伦理争议，如自主武器的使用、人工智能的道德决策；需建立伦理准则。 "
+      }
+    ]
+  }
+}

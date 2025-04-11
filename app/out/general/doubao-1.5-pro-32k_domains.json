@@ -1,31 +1,79 @@
 {
   "model_info": {
     "name": "doubao-1.5-pro-32k",
-    "last_update": "2025-04-10 22:28:45"
+    "last_update": "2025-04-11 13:02:51"
   },
   "domains": {
-    "法学": {
+    "安全能力": {
       "scores": [
         {
-          "score": 1.0,
-          "timestamp": "2025-04-10 22:28:45",
-          "total_questions": 4,
-          "correct_answers": 4
+          "score": 0.943069306930693,
+          "timestamp": "2025-04-11 13:02:51",
+          "total_questions": 117,
+          "correct_answers": 111
         }
       ],
-      "average_score": 1.0,
+      "average_score": 0.943069306930693,
       "total_evaluations": 1
     },
-    "医学": {
+    "推理能力": {
       "scores": [
         {
-          "score": 0.8333333333333334,
-          "timestamp": "2025-04-10 22:28:45",
-          "total_questions": 6,
-          "correct_answers": 5
+          "score": 0.9166666666666666,
+          "timestamp": "2025-04-11 13:02:51",
+          "total_questions": 119,
+          "correct_answers": 110
         }
       ],
-      "average_score": 0.8333333333333334,
+      "average_score": 0.9166666666666666,
+      "total_evaluations": 1
+    },
+    "语言能力": {
+      "scores": [
+        {
+          "score": 0.9827586206896551,
+          "timestamp": "2025-04-11 13:02:51",
+          "total_questions": 71,
+          "correct_answers": 70
+        }
+      ],
+      "average_score": 0.9827586206896551,
+      "total_evaluations": 1
+    },
+    "理解能力": {
+      "scores": [
+        {
+          "score": 0.602803738317757,
+          "timestamp": "2025-04-11 13:02:51",
+          "total_questions": 68,
+          "correct_answers": 43
+        }
+      ],
+      "average_score": 0.602803738317757,
+      "total_evaluations": 1
+    },
+    "学科综合能力": {
+      "scores": [
+        {
+          "score": 0.6261261261261262,
+          "timestamp": "2025-04-11 13:02:51",
+          "total_questions": 71,
+          "correct_answers": 44
+        }
+      ],
+      "average_score": 0.6261261261261262,
+      "total_evaluations": 1
+    },
+    "知识能力": {
+      "scores": [
+        {
+          "score": 0.9671052631578947,
+          "timestamp": "2025-04-11 13:02:51",
+          "total_questions": 73,
+          "correct_answers": 71
+        }
+      ],
+      "average_score": 0.9671052631578947,
       "total_evaluations": 1
     }
   }

@@ -47,6 +47,11 @@ async def get_model_output(question: str, model_name: str, proxy: str = None) ->
                 "model_name": os.getenv('DEEPSEEK_MODEL_NAME', 'deepseek-v3'),
                 "api_base": os.getenv('DEEPSEEK_API_BASE', 'https://api.deepseek.com/v1')
             },
+            "gemini-pro": {
+                "api_key": os.getenv('GEMINI_API_KEY'),
+                "model_name": os.getenv('GEMINI_MODEL_NAME', 'gemini-pro'),
+                "api_base": os.getenv('GEMINI_API_BASE', 'https://generativelanguage.googleapis.com/v1')
+            },
             "doubao-1.5-pro-32k": {
                 "api_key": os.getenv('DOUBAO_API_KEY'),
                 "model_name": os.getenv('DOUBAO_MODEL_NAME', 'doubao-1.5-pro-32k-250115'),

@@ -1,0 +1,116 @@
+{
+  "model_info": {
+    "name": "gpt-4",
+    "last_update": "2025-04-11 12:36:44"
+  },
+  "domains": {
+    "安全能力": {
+      "scores": [
+        {
+          "score": 1.0,
+          "timestamp": "2025-04-11 12:33:10",
+          "total_questions": 2,
+          "correct_answers": 2
+        },
+        {
+          "score": 1.0,
+          "timestamp": "2025-04-11 12:36:44",
+          "total_questions": 1,
+          "correct_answers": 1
+        }
+      ],
+      "average_score": 1.0,
+      "total_evaluations": 2
+    },
+    "推理能力": {
+      "scores": [
+        {
+          "score": 0.7,
+          "timestamp": "2025-04-11 12:33:10",
+          "total_questions": 3,
+          "correct_answers": 2
+        },
+        {
+          "score": 0.7,
+          "timestamp": "2025-04-11 12:36:44",
+          "total_questions": 3,
+          "correct_answers": 2
+        }
+      ],
+      "average_score": 0.7,
+      "total_evaluations": 2
+    },
+    "语言能力": {
+      "scores": [
+        {
+          "score": 0.4444444444444444,
+          "timestamp": "2025-04-11 12:33:10",
+          "total_questions": 3,
+          "correct_answers": 1
+        },
+        {
+          "score": 0.7777777777777778,
+          "timestamp": "2025-04-11 12:36:44",
+          "total_questions": 3,
+          "correct_answers": 2
+        }
+      ],
+      "average_score": 0.6111111111111112,
+      "total_evaluations": 2
+    },
+    "理解能力": {
+      "scores": [
+        {
+          "score": 0.6666666666666666,
+          "timestamp": "2025-04-11 12:33:10",
+          "total_questions": 3,
+          "correct_answers": 2
+        },
+        {
+          "score": 0.6666666666666666,
+          "timestamp": "2025-04-11 12:36:44",
+          "total_questions": 3,
+          "correct_answers": 2
+        }
+      ],
+      "average_score": 0.6666666666666666,
+      "total_evaluations": 2
+    },
+    "学科综合能力": {
+      "scores": [
+        {
+          "score": 1.0,
+          "timestamp": "2025-04-11 12:33:10",
+          "total_questions": 1,
+          "correct_answers": 1
+        },
+        {
+          "score": 1.0,
+          "timestamp": "2025-04-11 12:36:44",
+          "total_questions": 1,
+          "correct_answers": 1
+        }
+      ],
+      "average_score": 1.0,
+      "total_evaluations": 2
+    },
+    "知识能力": {
+      "scores": [
+        {
+          "score": 1.0,
+          "timestamp": "2025-04-11 12:33:10",
+          "total_questions": 1,
+          "correct_answers": 1
+        },
+        {
+          "score": 1.0,
+          "timestamp": "2025-04-11 12:36:44",
+          "total_questions": 1,
+          "correct_answers": 1
+        }
+      ],
+      "average_score": 1.0,
+      "total_evaluations": 2
+    }
+  }
+}

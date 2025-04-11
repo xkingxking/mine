@@ -54,15 +54,19 @@ class ReportGenerator:
             if domain not in report["domain_results"]:
                 report["domain_results"][domain] = []
             
+            # 确保获取到模型输出
+            model_output = question.get("model_output", "")
+            if not model_output:
+                print(f"警告: 问题 {question.get('id', 'unknown')} 没有模型输出")
+            
             question_result = {
                 "id": question["id"],
                 "type": question.get("type", "unknown"),
                 "difficulty": question.get("难度级别", "unknown"),
                 "metric": question.get("测试指标", "unknown"),
-                "question": question["question"],
-                "standard_answer": question["answer"],
-                "model_output": question.get("model_output", "")  # 添加模型输出字段
- # 添加评估结果字段
+                "question": question.get("question", ""),
+                "standard_answer": question.get("answer", ""),
+                "model_output": model_output  # 使用获取到的模型输出
             }
             report["domain_results"][domain].append(question_result)
         
@@ -79,58 +83,73 @@ class ReportGenerator:
             
         Returns:
             Path: 保存的文件路径
+        
+        Raises:
+            RuntimeError: 如果报告保存失败
         """
         # 生成文件名
         filename = f"{model_name}_{dataset_name}_evaluation.json"
         output_file = self.output_dir / filename
         
-        # 保存报告
-        with open(output_file, "w", encoding="utf-8") as f:
-            json.dump(report, f, ensure_ascii=False, indent=2)
-        
-        # 更新领域得分集合文件
-        domains_file = self.general_dir / f"{model_name}_domains.json"
         try:
-            # 尝试加载现有的领域得分集合
-            with open(domains_file, "r", encoding="utf-8") as f:
-                domains_data = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            # 如果文件不存在或格式错误，创建新的领域得分集合
-            domains_data = {
-                "model_info": {
-                    "name": model_name,
-                    "last_update": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                },
-                "domains": {}
-            }
-        
-        # 更新每个领域的得分
-        for domain, score_info in report["evaluation_summary"]["domain_scores"].items():
-            if domain not in domains_data["domains"]:
-                domains_data["domains"][domain] = {
-                    "scores": [],
-                    "average_score": 0.0,
-                    "total_evaluations": 0
+            # 保存报告
+            with open(output_file, "w", encoding="utf-8") as f:
+                json.dump(report, f, ensure_ascii=False, indent=2)
+            
+            # 检查文件是否成功保存
+            if not output_file.exists():
+                raise RuntimeError(f"报告文件未能成功保存到: {output_file}")
+            
+            # 更新领域得分集合文件
+            domains_file = self.general_dir / f"{model_name}_domains.json"
+            try:
+                # 尝试加载现有的领域得分集合
+                with open(domains_file, "r", encoding="utf-8") as f:
+                    domains_data = json.load(f)
+            except (FileNotFoundError, json.JSONDecodeError):
+                # 如果文件不存在或格式错误，创建新的领域得分集合
+                domains_data = {
+                    "model_info": {
+                        "name": model_name,
+                        "last_update": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    },
+                    "domains": {}
                 }
             
-            # 添加新的得分
-            domains_data["domains"][domain]["scores"].append({
-                "score": score_info["score"],
-                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "total_questions": score_info["total_questions"],
-                "correct_answers": score_info["correct_answers"]
-            })
+            # 更新每个领域的得分
+            for domain, score_info in report["evaluation_summary"]["domain_scores"].items():
+                if domain not in domains_data["domains"]:
+                    domains_data["domains"][domain] = {
+                        "scores": [],
+                        "average_score": 0.0,
+                        "total_evaluations": 0
+                    }
+                
+                # 添加新的得分
+                domains_data["domains"][domain]["scores"].append({
+                    "score": score_info["score"],
+                    "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "total_questions": score_info["total_questions"],
+                    "correct_answers": score_info["correct_answers"]
+                })
+                
+                # 更新平均得分
+                scores = [s["score"] for s in domains_data["domains"][domain]["scores"]]
+                domains_data["domains"][domain]["average_score"] = sum(scores) / len(scores)
+                domains_data["domains"][domain]["total_evaluations"] = len(scores)
             
-            # 更新平均得分
-            scores = [s["score"] for s in domains_data["domains"][domain]["scores"]]
-            domains_data["domains"][domain]["average_score"] = sum(scores) / len(scores)
-            domains_data["domains"][domain]["total_evaluations"] = len(scores)
-        
-        # 更新最后更新时间
-        domains_data["model_info"]["last_update"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        
-        # 保存领域得分集合
-        with open(domains_file, "w", encoding="utf-8") as f:
-            json.dump(domains_data, f, ensure_ascii=False, indent=2)
-        
-        return output_file 
+            # 更新最后更新时间
+            domains_data["model_info"]["last_update"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            
+            # 保存领域得分集合
+            with open(domains_file, "w", encoding="utf-8") as f:
+                json.dump(domains_data, f, ensure_ascii=False, indent=2)
+            
+            # 检查领域得分文件是否成功保存
+            if not domains_file.exists():
+                raise RuntimeError(f"领域得分文件未能成功保存到: {domains_file}")
+            
+            return output_file
+            
+        except Exception as e:
+            raise RuntimeError(f"保存报告时发生错误: {str(e)}") 
