@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 
 import json
 import os
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 deepseek_logger = logging.getLogger('deepseek_interactions')
 deepseek_logger.setLevel(logging.INFO)  # Set level to INFO to capture requests and responses
 # Prevent propagation to the root logger if needed
-# deepseek_logger.propagate = False
+deepseek_logger.propagate = False
 
 # Create a file handler for the deepseek logger
 log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../logs/transformed_logs')
@@ -366,7 +366,8 @@ class QuestionTransformer:
     def _ensure_model_loaded(self):
         """初始化 Deepseek API 调用函数。"""
         if self._pipeline is None:
-            api_key = os.environ.get("DEEPSEEK_API_KEY", "sk-041a37f65bc34e5989a1b71235d6cb62")
+            # api_key = os.environ.get("DEEPSEEK_API_KEY", "sk-041a37f65bc34e5989a1b71235d6cb62")
+            api_key = "sk-041a37f65bc34e5989a1b71235d6cb62"
             if not api_key:
                 raise ValueError("API key not provided. Please set the DEEPSEEK_API_KEY environment variable.")
             api_url = "https://api.deepseek.com/v1/chat/completions"
@@ -738,11 +739,11 @@ def send_to_deepseek(prompt, retry_count=3, timeout=120):
                  # Try to decode as JSON first
                  res_json = response.json()
                  response_text = json.dumps(res_json, ensure_ascii=False, indent=2)
-                 deepseek_logger.info(f"--- Deepseek Response (Status: {response.status_code}) ---\n{response_text}")
+                 deepseek_logger.debug(f"--- Deepseek Response (Status: {response.status_code}) ---\n{response_text}")
             except json.JSONDecodeError:
                  # If not JSON, log raw text
                  response_text = response.text
-                 deepseek_logger.info(f"--- Deepseek Response (Status: {response.status_code}, Not JSON) ---\n{response_text}")
+                 deepseek_logger.debug(f"--- Deepseek Response (Status: {response.status_code}, Not JSON) ---\n{response_text}")
 
             
             # 处理不同的HTTP状态码
@@ -868,6 +869,32 @@ def transform_questions(source_file, output_file, progress_callback=None, max_id
         # 这里仅作状态更新
         update_task_status(task_id, TASK_STATUS['RUNNING'], "开始/恢复变形题目")
     
+    # 为新任务创建全新的输出文件，避免使用之前任务的残留文件
+    if task_id and os.path.exists(output_file):
+        # 如果是全新任务(非恢复)，检查任务状态文件确认
+        task_log_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../logs/transformed_logs/tasks.json')
+        is_new_task = True
+        if os.path.exists(task_log_path):
+            try:
+                with open(task_log_path, 'r', encoding='utf-8') as f:
+                    tasks_data = json.load(f)
+                # 如果任务ID存在且状态不是"paused"，则视为新任务
+                if task_id in tasks_data:
+                    if tasks_data[task_id].get('status') == TASK_STATUS['PAUSED']:
+                        is_new_task = False  # 是暂停后恢复的任务
+            except Exception as e:
+                logger.error(f"检查任务状态时出错: {e}")
+        
+        # 如果是新任务但输出文件已存在，则重命名旧文件
+        if is_new_task:
+            timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+            backup_file = f"{output_file}.bak_{timestamp}"
+            try:
+                logger.info(f"检测到新任务但输出文件已存在，删除旧文件: {output_file}")
+                os.remove(output_file)  # 直接删除旧文件，不保留备份
+            except Exception as e:
+                logger.error(f"删除已存在的输出文件失败: {e}")
+    
     # 创建任务监控器
     monitor = TaskMonitor(max_idle_time=max_idle_time, task_id=task_id)
 
@@ -896,6 +923,9 @@ def transform_questions(source_file, output_file, progress_callback=None, max_id
                     try:
                         with open(task_log_path, 'r', encoding='utf-8') as f:
                             tasks_data = json.load(f)
+                        if task_id not in tasks_data:
+                            logger.info(f"任务 {task_id} 已不存在于任务列表中，中止执行")
+                            return True
                         if task_id in tasks_data:
                             current_status = tasks_data[task_id].get('status')
                             if current_status == TASK_STATUS['CANCELLED']:
@@ -1049,6 +1079,19 @@ def transform_questions(source_file, output_file, progress_callback=None, max_id
                 result['questions'].append(result_item)
                 processed_count_in_this_run += 1
 
+                # 在每处理完一道题后立即检查任务是否被取消
+                if check_if_cancelled():
+                    logger.info(f"任务 {task_id} 已被取消，处理完第 {global_index+1} 题后中止")
+                    # 保存当前处理结果
+                    try:
+                        result['transformed_at'] = datetime.now().isoformat()
+                        with open(output_file, 'w', encoding='utf-8') as f:
+                            json.dump(result, f, ensure_ascii=False, indent=2)
+                        logger.info(f"已保存中间结果到: {output_file}")
+                    except Exception as e:
+                        logger.error(f"保存中间结果时出错: {e}")
+                    return
+
                 # Log progress and save intermediate results periodically
                 # 保存逻辑：每5个 *新处理* 的问题保存一次，或者当处理完最后一个问题时保存
                 if processed_count_in_this_run % 5 == 0 or (current_index_in_run + 1) == total_questions:
@@ -1165,8 +1208,8 @@ def parse_deepseek_response(response, question_type, question_id):
         解析后的变形题目列表 (List[Dict]) 或在严重错误时返回包含错误信息的列表
     """
     logger.debug(f"开始解析题目 {question_id} 的API响应，响应长度: {len(response) if response else 0}字符")
-    deepseek_logger.info(f"--- Parsing Response for Question ID: {question_id} ---") # Log to specific file
-    deepseek_logger.info(f"Raw Response:\n{response}") # Log raw response being parsed
+    deepseek_logger.debug(f"--- Parsing Response for Question ID: {question_id} ---") # 改为DEBUG级别
+    deepseek_logger.debug(f"Raw Response:\n{response}") # 改为DEBUG级别
     
     transformed_versions = []
     
@@ -1521,16 +1564,12 @@ def main():
     parser.add_argument("--workers", "-w", type=int, default=4, help="并行处理的线程数")
     args = parser.parse_args()
 
-    # 配置日志，确保使用UTF-8编码
-    handler = logging.StreamHandler(sys.stdout)
-    handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s: %(message)s'))
-    
+    # 配置日志，只保存到文件，不输出到终端
     file_handler = logging.FileHandler('transformer_standalone.log', encoding='utf-8')
     file_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s: %(message)s'))
     
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
-    logger.addHandler(handler)
     logger.addHandler(file_handler)
 
     # 开始处理
@@ -1545,17 +1584,14 @@ if __name__ == "__main__":
         transformed_file = sys.argv[2]
         output_file = sys.argv[3] if len(sys.argv) > 3 else None
         
-        # 设置日志
-        logging.basicConfig(
-            level=logging.INFO,
-            format='%(asctime)s %(levelname)s: %(message)s',
-            handlers=[
-                logging.StreamHandler(sys.stdout),
-                logging.FileHandler('transformer_fix.log', encoding='utf-8')
-            ]
-        )
+        # 设置日志，只保存到文件，不输出到终端
+        logger = logging.getLogger()
+        logger.setLevel(logging.INFO)
+        file_handler = logging.FileHandler('transformer_fix.log', encoding='utf-8')
+        file_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s: %(message)s'))
+        logger.addHandler(file_handler)
         
         fixed_count = fix_transformed_questions(transformed_file, output_file)
-        print(f"成功修复 {fixed_count} 个题目")
+        logger.info(f"成功修复 {fixed_count} 个题目")
     else:
         main()

@@ -6,6 +6,18 @@
         <el-button type="primary" @click="showTransformDialog">
           <i class="fas fa-magic"></i> 创建变形任务
         </el-button>
+        <el-button 
+          type="warning" 
+          @click="clearLogs" 
+          :disabled="!allTasksCompleted"
+          v-tooltip="{
+            content: '日志文件堆积过多会影响变形和评估的完成，记得及时清理日志文件~\n有任务未完成时不允许清除日志文件~',
+            placement: 'bottom',
+            effect: 'light'
+          }"
+        >
+          <i class="fas fa-broom"></i> 清空日志
+        </el-button>
         <div class="search-box">
           <el-input 
             v-model="searchQuery" 
@@ -521,6 +533,12 @@ export default {
       return result
     })
 
+    const allTasksCompleted = computed(() => {
+      // 判断所有任务是否都已完成
+      if (tasks.value.length === 0) return true
+      return tasks.value.every(task => task.status === 'completed')
+    })
+
     const fetchTasks = async () => {
       try {
         const params = new URLSearchParams()
@@ -945,22 +963,12 @@ export default {
       }
     }
 
-    const getDifficultyType = (difficulty) => {
-       const difficultyStr = String(difficulty || '');
-       console.log(`[getDifficultyType] Input: '${difficultyStr}' (Type: ${typeof difficultyStr})`);
-       const typeMap = {
-         '简单': 'success',
-         '中等': 'warning',
-         '困难': 'danger'
-       };
-       let result = 'info';
-       if (difficultyStr in typeMap) {
-           result = typeMap[difficultyStr];
-           console.log(`[getDifficultyType] Match found for '${difficultyStr}', returning: '${result}'`);
-       } else {
-           console.log(`[getDifficultyType] No match found for '${difficultyStr}', returning default: '${result}'`);
-       }
-       return result;
+    const getDifficultyTagType = (difficulty) => {
+      const difficultyStr = String(difficulty || '').toLowerCase();
+      if (difficultyStr.includes('简单') || difficultyStr.includes('easy')) return 'success';
+      if (difficultyStr.includes('中等') || difficultyStr.includes('medium')) return 'warning';
+      if (difficultyStr.includes('困难') || difficultyStr.includes('hard')) return 'danger';
+      return 'info';
     };
 
     const getQuestionType = (type) => {
@@ -1003,13 +1011,40 @@ export default {
       return '无选项或格式未知'
     }
 
-    const getDifficultyTagType = (difficulty) => {
-      const difficultyStr = String(difficulty || '').toLowerCase();
-      if (difficultyStr.includes('简单') || difficultyStr.includes('easy')) return 'success';
-      if (difficultyStr.includes('中等') || difficultyStr.includes('medium')) return 'warning';
-      if (difficultyStr.includes('困难') || difficultyStr.includes('hard')) return 'danger';
-      return 'info';
-    };
+    const clearLogs = async () => {
+      try {
+        if (!allTasksCompleted.value) {
+          ElMessage.warning('有任务未完成，不能清空日志文件')
+          return
+        }
+        
+        ElMessageBox.confirm(
+          '确定要清空所有日志文件吗？这将清空除tasks.json以外的所有日志文件。',
+          '确认清空日志',
+          {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }
+        ).then(async () => {
+          const response = await fetch('http://localhost:5000/api/logs/clear', {
+            method: 'POST'
+          })
+          const data = await response.json()
+          
+          if (data.success) {
+            ElMessage.success(data.message || '日志已清空')
+          } else {
+            ElMessage.error(data.message || '清空日志失败')
+          }
+        }).catch(() => {
+          // 用户取消操作
+        })
+      } catch (error) {
+        console.error('清空日志文件出错:', error)
+        ElMessage.error(`清空日志失败: ${error.message || '未知错误'}`)
+      }
+    }
 
     onMounted(() => {
       fetchTasks()
@@ -1056,7 +1091,7 @@ export default {
       getTaskStatusTag,
       getTaskStatusText,
       formatDate,
-      getDifficultyType,
+      getDifficultyTagType,
       getQuestionType,
       getQuestionTypeName,
       previewSelectedFile,
@@ -1072,9 +1107,10 @@ export default {
       currentTaskName,
       overviewStats,
       formatChoicesText,
-      getDifficultyTagType,
       filteredOtherMetadata,
       hasOtherMetadata,
+      allTasksCompleted,
+      clearLogs,
     }
   }
 }
