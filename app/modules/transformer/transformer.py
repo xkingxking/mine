@@ -366,8 +366,7 @@ class QuestionTransformer:
     def _ensure_model_loaded(self):
         """初始化 Deepseek API 调用函数。"""
         if self._pipeline is None:
-            # api_key = os.environ.get("DEEPSEEK_API_KEY", "sk-041a37f65bc34e5989a1b71235d6cb62")
-            api_key = "sk-041a37f65bc34e5989a1b71235d6cb62"
+            api_key = os.environ.get("DEEPSEEK_API_KEY")
             if not api_key:
                 raise ValueError("API key not provided. Please set the DEEPSEEK_API_KEY environment variable.")
             api_url = "https://api.deepseek.com/v1/chat/completions"

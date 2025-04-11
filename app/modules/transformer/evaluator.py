@@ -62,8 +62,7 @@ def send_to_deepseek(prompt):
     发送prompt到Deepseek进行评估，记录请求/响应，处理错误。
     返回评估文本，如果失败则返回None。
     """
-    # api_key = os.environ.get("DEEPSEEK_API_KEY", "sk-041a37f65bc34e5989a1b71235d6cb62")
-    api_key = "sk-041a37f65bc34e5989a1b71235d6cb62"
+    api_key = os.environ.get("DEEPSEEK_API_KEY")
     if not api_key:
         logger.error("未设置Deepseek API密钥，无法进行评估")
         deepseek_eval_logger.debug("--- Deepseek Request (Not Sent - No API Key) ---")
