@@ -109,7 +109,7 @@ stream_handler.setFormatter(formatter)
 root_logger.addHandler(stream_handler)
 
 # File Handler for app.log (for root logger and app.logger)
-app_log_handler = RotatingFileHandler(os.path.join(LOGS_DIR, 'app.log'), maxBytes=10000000, backupCount=5,
+app_log_handler = RotatingFileHandler(os.path.join(LOGS_DIR, 'app.log'), maxBytes=50000000, backupCount=10,
                                       encoding='utf-8')
 app_log_handler.setFormatter(formatter)
 root_logger.addHandler(app_log_handler)
@@ -121,7 +121,7 @@ app.logger.propagate = False  # Prevent Flask logs from being handled by root lo
 # --- Transformer Logger Configuration (for transformer.log) ---
 transformer_logger = logging.getLogger('transformer')
 transformer_logger.setLevel(logging.DEBUG)
-transformer_handler = RotatingFileHandler(os.path.join(LOGS_DIR, 'transformer.log'), maxBytes=5000000, backupCount=3,
+transformer_handler = RotatingFileHandler(os.path.join(LOGS_DIR, 'transformer.log'), maxBytes=50000000, backupCount=10,
                                           encoding='utf-8')
 transformer_handler.setFormatter(formatter)
 transformer_logger.addHandler(transformer_handler)
@@ -130,7 +130,7 @@ transformer_logger.propagate = False
 # --- Evaluator Logger Configuration (for evaluator.log) ---
 evaluator_logger = logging.getLogger('evaluator')
 evaluator_logger.setLevel(logging.DEBUG)
-evaluator_handler = RotatingFileHandler(os.path.join(LOGS_DIR, 'evaluator.log'), maxBytes=5000000, backupCount=3,
+evaluator_handler = RotatingFileHandler(os.path.join(LOGS_DIR, 'evaluator.log'), maxBytes=50000000, backupCount=10,
                                         encoding='utf-8')
 evaluator_handler.setFormatter(formatter)
 evaluator_logger.addHandler(evaluator_handler)
@@ -138,8 +138,8 @@ evaluator_logger.propagate = False
 
 # --- Werkzeug (Access Log) Configuration (for access.log) ---
 werkzeug_logger = logging.getLogger('werkzeug')
-werkzeug_logger.setLevel(logging.INFO)  # Or logging.WARNING to be less verbose
-access_log_handler = RotatingFileHandler(os.path.join(LOGS_DIR, 'access.log'), maxBytes=10000000, backupCount=5,
+werkzeug_logger.setLevel(logging.CRITICAL)  # 设置为CRITICAL级别，几乎不会有日志输出
+access_log_handler = RotatingFileHandler(os.path.join(LOGS_DIR, 'access.log'), maxBytes=50000000, backupCount=10,
                                          encoding='utf-8')
 access_log_handler.setFormatter(formatter)
 werkzeug_logger.addHandler(access_log_handler)
@@ -1374,10 +1374,12 @@ def retry_task_endpoint(task_id):
             )
             thread.daemon = True
             thread.start()
+            return jsonify({'status': 'success', 'message': '任务已开始重试'}), 200
         else:
             app.logger.info(f"任务 {task_id} 加入等待队列。当前运行任务数: {running_task_count}")
             pending_queue.append(task_id)
             save_tasks()
+            return jsonify({'status': 'success', 'message': '任务已加入等待队列'}), 200
 
 
 @app.route('/api/tasks/<task_id>/transformed', methods=['GET'])
@@ -1551,6 +1553,45 @@ def handle_disconnect():
 
 
 
+
+
+@app.route('/api/logs/clear', methods=['POST'])
+def clear_logs():
+    """
+    清空日志文件的API端点
+    仅当所有任务都已完成时才允许清空日志文件
+    """
+    # 检查是否有任务正在运行
+    all_completed = True
+    for task_id, task in tasks.items():
+        if task.get('status') != 'completed':
+            all_completed = False
+            break
+    
+    if not all_completed:
+        return jsonify({
+            "success": False,
+            "message": "有任务未完成，不能清空日志文件"
+        }), 400
+    
+    # 清空所有日志文件，除了tasks.json
+    try:
+        log_files = glob.glob(os.path.join(LOGS_DIR, "*.log"))
+        for log_file in log_files:
+            # 打开文件并清空内容
+            with open(log_file, 'w', encoding='utf-8') as f:
+                f.write('')
+                
+        return jsonify({
+            "success": True,
+            "message": "日志文件已清空"
+        })
+    except Exception as e:
+        app.logger.error(f"清空日志文件时出错: {str(e)}")
+        return jsonify({
+            "success": False,
+            "message": f"清空日志文件时出错: {str(e)}"
+        }), 500
 
 
 if __name__ == '__main__':

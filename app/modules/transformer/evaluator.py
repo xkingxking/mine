@@ -5,11 +5,12 @@ import requests
 import argparse
 import os
 import logging
+import logging.handlers  # 添加handlers模块导入
 from datetime import datetime
 import time # 添加 time 模块用于模拟处理时间
 import sys
 import re
-from transformer import update_task_status, TASK_STATUS
+from transformer import update_task_status, TASK_STATUS, TaskMonitor
 
 # Get a logger specific to this module
 logger = logging.getLogger(__name__)
@@ -17,14 +18,21 @@ logger = logging.getLogger(__name__)
 # Configure a new logger for Deepseek interactions in evaluator
 deepseek_eval_logger = logging.getLogger('deepseek_eval_interactions')
 deepseek_eval_logger.setLevel(logging.INFO) # Set level to INFO
-# deepseek_eval_logger.propagate = False # Prevent double logging if root logger has handlers
+deepseek_eval_logger.propagate = False # Prevent double logging if root logger has handlers
 
 # Create a file handler for the deepseek eval logger
 log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../logs/transformed_logs') # Adjust path
 if not os.path.exists(log_dir):
     os.makedirs(log_dir)
 deepseek_eval_log_file = os.path.join(log_dir, 'evaluator_deepseek.log')
-file_handler_eval = logging.FileHandler(deepseek_eval_log_file, encoding='utf-8')
+file_handler_eval = logging.handlers.RotatingFileHandler(
+    deepseek_eval_log_file, 
+    maxBytes=50000000,  # 50MB
+    backupCount=10,
+    encoding='utf-8', 
+    mode='a', 
+    delay=True
+)
 
 # Create a formatter and set it for the handler
 formatter_eval = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -33,15 +41,14 @@ file_handler_eval.setFormatter(formatter_eval)
 # Add the handler to the deepseek eval logger
 deepseek_eval_logger.addHandler(file_handler_eval)
 
-# 添加模拟评估响应函数
 def mock_evaluation_response():
     """
-    当Deepseek API调用失败或API密钥未设置时，返回模拟的评估响应数据
+    提供模拟的评估响应，用于测试或API连接失败时的备用方案
     
     Returns:
         模拟的评估响应文本
     """
-    logger.warning("使用模拟评估数据")
+    logger.debug("使用模拟评估数据")
     mock_response = """
 文本相似度：0.5，0.5，0.5，0.5
 测试指标一致性：0.5，0.5，0.5，0.5
@@ -52,16 +59,15 @@ def mock_evaluation_response():
 
 def send_to_deepseek(prompt):
     """
-    Sends prompt to Deepseek for evaluation, logs request/response, handles errors.
-    Returns evaluation text or mock data on failure.
+    发送prompt到Deepseek进行评估，记录请求/响应，处理错误。
+    返回评估文本，如果失败则返回None。
     """
     api_key = os.environ.get("DEEPSEEK_API_KEY")
     if not api_key:
-        logger.error("未设置Deepseek API密钥，评估将使用mock数据")
-        # Log the prompt that would have been sent
-        deepseek_eval_logger.warning("--- Deepseek Request (Not Sent - No API Key) ---")
-        deepseek_eval_logger.warning(f"Prompt:\n{prompt}")
-        return mock_evaluation_response()
+        logger.error("未设置Deepseek API密钥，无法进行评估")
+        deepseek_eval_logger.debug("--- Deepseek Request (Not Sent - No API Key) ---")
+        deepseek_eval_logger.debug(f"Prompt:\n{prompt}")
+        return mock_evaluation_response()  # 使用模拟评估数据
 
     api_url = "https://api.deepseek.com/v1/chat/completions"
     headers = {
@@ -79,62 +85,98 @@ def send_to_deepseek(prompt):
     # Log request details
     safe_headers = headers.copy()
     safe_headers["Authorization"] = "Bearer sk-***"
-    logger.info(f"发送评估请求到Deepseek (简略)") # Main logger less verbose
-    deepseek_eval_logger.info("--- Deepseek Evaluation Request ---")
-    deepseek_eval_logger.info(f"URL: {api_url}")
-    deepseek_eval_logger.info(f"Headers: {json.dumps(safe_headers, indent=2)}")
-    deepseek_eval_logger.info(f"Payload: {json.dumps(payload, ensure_ascii=False, indent=2)}")
+    logger.debug(f"发送评估请求到Deepseek (简略)") # 改为debug级别
+    deepseek_eval_logger.debug("--- Deepseek Evaluation Request ---")
+    deepseek_eval_logger.debug(f"URL: {api_url}")
+    deepseek_eval_logger.debug(f"Headers: {json.dumps(safe_headers, indent=2)}")
+    deepseek_eval_logger.debug(f"Payload: {json.dumps(payload, ensure_ascii=False, indent=2)}")
 
     timeout_seconds = 120 # Increased timeout for potentially longer evaluations
-    try:
-        logger.debug(f"向 Deepseek 发送评估请求 (timeout={timeout_seconds}s)...")
-        start_time = time.time()
-        response = requests.post(api_url, headers=headers, json=payload, timeout=timeout_seconds)
-        elapsed_time = time.time() - start_time
-        logger.debug(f"Deepseek API 评估响应耗时: {elapsed_time:.2f}秒")
-
-        # Log response status and content regardless of status code
-        response_text = ""
+    max_retries = 3 # 最多重试次数
+    retry_delay = 5 # 重试间隔时间（秒）
+    
+    for retry_count in range(max_retries + 1):
+        if retry_count > 0:
+            logger.warning(f"第 {retry_count} 次重试 Deepseek API 请求...")
+            # 如果是重试，增加延迟时间
+            time.sleep(retry_delay * retry_count)
+            
         try:
-            res_json = response.json()
-            response_text = json.dumps(res_json, ensure_ascii=False, indent=2)
-            deepseek_eval_logger.info(f"--- Deepseek Evaluation Response (Status: {response.status_code}) ---\n{response_text}")
-        except json.JSONDecodeError:
-            response_text = response.text
-            deepseek_eval_logger.info(f"--- Deepseek Evaluation Response (Status: {response.status_code}, Not JSON) ---\n{response_text}")
+            logger.debug(f"向 Deepseek 发送评估请求 (timeout={timeout_seconds}s)...")
+            start_time = time.time()
+            response = requests.post(api_url, headers=headers, json=payload, timeout=timeout_seconds)
+            elapsed_time = time.time() - start_time
+            logger.debug(f"Deepseek API 评估响应耗时: {elapsed_time:.2f}秒")
 
-        logger.debug(f"Deepseek API 评估响应状态码: {response.status_code}")
-        if response.status_code == 200:
-            logger.debug("Deepseek API 评估连接成功。")
-            # res_json already parsed
-            content = res_json.get("choices", [{}])[0].get("message", {}).get("content", "")
+            # Log response status and content regardless of status code
+            response_text = ""
+            try:
+                res_json = response.json()
+                response_text = json.dumps(res_json, ensure_ascii=False, indent=2)
+                deepseek_eval_logger.debug(f"--- Deepseek Evaluation Response (Status: {response.status_code}) ---\n{response_text}")
+            except json.JSONDecodeError:
+                response_text = response.text
+                deepseek_eval_logger.debug(f"--- Deepseek Evaluation Response (Status: {response.status_code}, Not JSON) ---\n{response_text}")
 
-            if not content:
-                 logger.warning("Deepseek API 评估响应成功，但内容为空，将使用mock数据")
-                 return mock_evaluation_response()
+            logger.debug(f"Deepseek API 评估响应状态码: {response.status_code}")
+            if response.status_code == 200:
+                logger.debug("Deepseek API 评估连接成功。")
+                # res_json already parsed
+                content = res_json.get("choices", [{}])[0].get("message", {}).get("content", "")
 
-            # Log the useful content part
-            logger.info("成功获取Deepseek评估结果。")
-            deepseek_eval_logger.debug(f"Extracted Content:\n{content}")
-            return content
-        else:
-            # Handle specific errors differently if needed (e.g., 401, 429)
-            logger.error(f"Deepseek API 评估响应错误: HTTP {response.status_code}, 响应: {response_text[:500]}")
-            logger.warning("由于API错误，评估将使用mock数据")
-            return mock_evaluation_response()
+                if not content:
+                     logger.warning("Deepseek API 评估响应成功，但内容为空")
+                     if retry_count < max_retries:
+                         continue  # 如果内容为空且未达到最大重试次数，则重试
+                     else:
+                         logger.error("多次重试后仍无有效内容，使用模拟数据")
+                         return mock_evaluation_response()
 
-    except requests.exceptions.Timeout:
-        logger.error(f"Deepseek API 评估调用超时 ({timeout_seconds}s)", exc_info=True)
-        logger.warning("由于API超时，评估将使用mock数据")
-        return mock_evaluation_response()
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Deepseek API 评估请求失败: {e}", exc_info=True)
-        logger.warning("由于API请求失败，评估将使用mock数据")
-        return mock_evaluation_response()
-    except Exception as e:
-        logger.error(f"处理 Deepseek API 评估响应失败: {e}", exc_info=True)
-        logger.warning("由于处理响应失败，评估将使用mock数据")
-        return mock_evaluation_response()
+                # Log the useful content part
+                logger.debug("成功获取Deepseek评估结果。") # 改为debug级别
+                deepseek_eval_logger.debug(f"Extracted Content:\n{content}")
+                return content
+            else:
+                # 处理不同的错误状态码
+                error_msg = f"Deepseek API 评估响应错误: HTTP {response.status_code}"
+                if response.status_code == 401:
+                    error_msg = f"Deepseek API 认证失败 (401): API密钥可能无效"
+                elif response.status_code == 429:
+                    error_msg = f"Deepseek API 请求过多 (429): 已达到速率限制"
+                elif response.status_code >= 500:
+                    error_msg = f"Deepseek API 服务器错误 ({response.status_code}): 服务可能不可用"
+                
+                logger.error(f"{error_msg}, 响应: {response_text[:500]}")
+                
+                if retry_count < max_retries:
+                    if response.status_code in [429, 500, 502, 503, 504]:  # 这些状态码适合重试
+                        continue  # 重试
+                    else:
+                        # 对于其他错误码，如认证错误等，没必要重试
+                        logger.error(f"错误类型不适合重试，放弃并使用模拟数据")
+                        return mock_evaluation_response()
+                else:
+                    logger.error(f"已达到最大重试次数 {max_retries}，使用模拟数据")
+                    return mock_evaluation_response()
+
+        except requests.exceptions.Timeout:
+            logger.error(f"Deepseek API 评估调用超时 ({timeout_seconds}s)", exc_info=True)
+            if retry_count < max_retries:
+                continue  # 重试
+            else:
+                return mock_evaluation_response()
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Deepseek API 评估请求失败: {e}", exc_info=True)
+            if retry_count < max_retries:
+                continue  # 重试
+            else:
+                return mock_evaluation_response()
+        except Exception as e:
+            logger.error(f"处理 Deepseek API 评估响应失败: {e}", exc_info=True)
+            if retry_count < max_retries:
+                continue  # 重试
+            else:
+                return mock_evaluation_response()
 
 
 def build_prompt(original, transformed_list):
@@ -208,11 +250,9 @@ def parse_deepseek_response(response, num_questions):
     }
     
     if not response:
-        # 如果响应为空，所有分数都设为0.5
-        logger.warning("Deepseek API 响应为空，使用默认分数0.5")
-        for key in scores:
-            scores[key] = [0.5] * num_questions
-        return scores
+        # 如果响应为空，返回空数据
+        logger.error("Deepseek API 响应为空，无法进行评估")
+        return None
     
     # 修复解析逻辑，处理单个变形题的情况
     lines = response.strip().split("\n")
@@ -293,41 +333,61 @@ def compute_comprehensive_score(ts, ti, sc, kc):
 
 def evaluate_questions(source_file, transformed_file, output_file, progress_callback=None, max_idle_time=600, task_id=None):
     """
-    评估变形题目质量
+    评估变形后的题目质量
     
     Args:
-        source_file: 原始题库文件路径
-        transformed_file: 变形后题库文件路径
-        output_file: 评估结果输出文件路径
+        source_file: 源题库JSON文件路径
+        transformed_file: 变形后题库的JSON文件路径
+        output_file: 输出评估结果的JSON文件路径
         progress_callback: 进度回调函数
-        max_idle_time: 最大空闲时间，单位秒
-        task_id: 任务ID
+        max_idle_time: 最大空闲时间(秒)，超过会被监控器标记为失败
+        task_id: 任务ID，用于状态监控
     """
     # 确保输出目录存在
     output_dir = os.path.dirname(output_file)
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-    
+        
     # 创建日志目录（如果不存在）
     log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../logs/transformed_logs')
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
-    
-    logger.info(f"开始评估任务，原始文件: {source_file}, 变形文件: {transformed_file}, 输出文件: {output_file}")
-    
-    # 导入TaskMonitor和任务状态更新函数
-    try:
-        from transformer import TaskMonitor, update_task_status, TASK_STATUS
-        # 创建任务监控器
-        monitor = TaskMonitor(max_idle_time=max_idle_time, task_id=task_id)
         
-        # 更新任务状态为评估中
-        if task_id:
-            update_task_status(task_id, TASK_STATUS['EVALUATING'], "正在评估变形结果")
-    except ImportError:
-        logger.warning("无法导入TaskMonitor，将不使用任务监控")
-        monitor = None
+    logger.info(f"开始评估任务，源文件: {source_file}, 变形文件: {transformed_file}, 输出: {output_file}, Task ID: {task_id}")
+    
+    # 如果有任务ID，更新任务状态为评估中
+    if task_id:
+        update_task_status(task_id, TASK_STATUS['EVALUATING'], "开始评估题目")
+    
+    # 为新任务创建全新的输出文件，避免使用之前任务的残留评估文件
+    if task_id and os.path.exists(output_file):
+        # 如果是全新任务(非恢复)，检查任务状态文件确认
+        task_log_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../logs/transformed_logs/tasks.json')
+        is_new_task = True
+        if os.path.exists(task_log_path):
+            try:
+                with open(task_log_path, 'r', encoding='utf-8') as f:
+                    tasks_data = json.load(f)
+                # 如果任务ID存在且状态不是"paused"，则视为新任务
+                if task_id in tasks_data:
+                    if tasks_data[task_id].get('status') == TASK_STATUS['PAUSED']:
+                        is_new_task = False  # 是暂停后恢复的任务
+            except Exception as e:
+                logger.error(f"检查任务状态时出错: {e}")
         
+        # 如果是新任务但输出文件已存在，则重命名旧文件
+        if is_new_task:
+            timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+            backup_file = f"{output_file}.bak_{timestamp}"
+            try:
+                logger.info(f"检测到新评估任务但输出文件已存在，删除旧文件: {output_file}")
+                os.remove(output_file)  # 直接删除旧文件，不保留备份
+            except Exception as e:
+                logger.error(f"删除已存在的评估输出文件失败: {e}")
+    
+    # 创建任务监控器
+    monitor = TaskMonitor(max_idle_time=max_idle_time, task_id=task_id)
+    
     try:
         # 检查输入文件是否存在
         if not os.path.exists(source_file):
@@ -388,6 +448,9 @@ def evaluate_questions(source_file, transformed_file, output_file, progress_call
                     try:
                         with open(task_log_path, 'r', encoding='utf-8') as f:
                             tasks_data = json.load(f)
+                        if task_id not in tasks_data:
+                            logger.info(f"任务 {task_id} 已不存在于任务列表中，中止评估")
+                            return True
                         if task_id in tasks_data:
                             current_status = tasks_data[task_id].get('status')
                             if current_status == TASK_STATUS['CANCELLED']:
@@ -436,67 +499,125 @@ def evaluate_questions(source_file, transformed_file, output_file, progress_call
             logger.debug(f"向 Deepseek 发送评估请求 (原始ID: {question_id})")
             response = send_to_deepseek(prompt)
             
+            # 进行评估并解析结果
             try:
-                # 解析 Deepseek 返回的结果
                 scores = parse_deepseek_response(response, len(transformed_versions))
                 
-                # 计算综合得分
-                comprehensive_scores = []
-                for j in range(len(transformed_versions)):
-                    ts = scores["文本相似度"][j]
-                    ti = scores["测试指标一致性"][j]
-                    sc = scores["语义清晰度与表达准确性"][j]
-                    kc = scores["可评估性"][j]
-                    comprehensive_score = compute_comprehensive_score(ts, ti, sc, kc)
-                    comprehensive_scores.append(comprehensive_score)
-                
-                # 构建评估结果
+                # 评估分数数据
                 question_result = {
                     'original_id': question_id,
-                    'transformed_versions': []
+                    'transformed_versions': transformed_versions,
                 }
                 
-                # 添加各变形版本的得分
-                for j, tv in enumerate(transformed_versions):
-                    version_result = {
-                        'transform_method': tv.get('transform_method', '未知'),
-                        'scores': {
-                            '文本相似度': scores["文本相似度"][j],
-                            '测试指标一致性': scores["测试指标一致性"][j],
-                            '语义清晰度与表达准确性': scores["语义清晰度与表达准确性"][j],
-                            '可评估性': scores["可评估性"][j],
-                            '综合得分': comprehensive_scores[j]
-                        }
+                # 添加到结果列表
+                result['questions'].append(question_result)
+                
+                # 累计总分
+                for method, score_list in scores.items():
+                    if 'total_scores' not in result:
+                        result['total_scores'] = {}
+                    if method not in result['total_scores']:
+                        result['total_scores'][method] = {'score': 0, 'count': 0}
+                    
+                    # 计算当前题目该指标的平均分并加到total_scores中
+                    if score_list and isinstance(score_list, list):
+                        avg_score = sum(score_list) / len(score_list)
+                        result['total_scores'][method]['score'] += avg_score
+                        result['total_scores'][method]['count'] += 1
+                    elif isinstance(score_list, (int, float)):
+                        # 如果是单个数值，直接加
+                        result['total_scores'][method]['score'] += score_list
+                        result['total_scores'][method]['count'] += 1
+                
+                logger.debug(f"评估得分: {scores}")
+                
+                # 将评分转换为正确的格式 - 为每个变形版本分配相应的得分
+                for version_idx, version in enumerate(transformed_versions):
+                    version_scores = {}
+                    ts_score = scores["文本相似度"][version_idx] if version_idx < len(scores["文本相似度"]) else 0.0
+                    ti_score = scores["测试指标一致性"][version_idx] if version_idx < len(scores["测试指标一致性"]) else 0.0
+                    sc_score = scores["语义清晰度与表达准确性"][version_idx] if version_idx < len(scores["语义清晰度与表达准确性"]) else 0.0
+                    kc_score = scores["可评估性"][version_idx] if version_idx < len(scores["可评估性"]) else 0.0
+                    
+                    # 计算单个变形版本的综合得分
+                    comprehensive_score = compute_comprehensive_score(ts_score, ti_score, sc_score, kc_score)
+                    
+                    # 创建单个变形版本的评分字典
+                    version_scores = {
+                        "文本相似度": ts_score,
+                        "测试指标一致性": ti_score,
+                        "语义清晰度与表达准确性": sc_score,
+                        "可评估性": kc_score,
+                        "综合得分": comprehensive_score
                     }
-                    question_result['transformed_versions'].append(version_result)
+                    
+                    # 创建简化版本的对象，只保留必要字段
+                    simplified_version = {
+                        "transform_method": version.get("transform_method", "未知"),
+                        "scores": version_scores
+                    }
+                    
+                    # 替换原始transformed_versions中的对象
+                    transformed_versions[version_idx] = simplified_version
+                    
+                    # 累加到问题总分
+                    if "average_score" not in question_result:
+                        question_result["average_score"] = 0
+                    question_result["average_score"] += comprehensive_score
                 
-                # 计算该题目的平均得分
-                avg_score = sum(comprehensive_scores) / len(comprehensive_scores) if comprehensive_scores else 0
-                question_result['average_score'] = avg_score
+                # 计算问题平均分
+                if len(transformed_versions) > 0:
+                    question_result["average_score"] /= len(transformed_versions)
+                    # 累加到总平均分
+                    if "total_score" not in result:
+                        result["total_score"] = 0
+                    result["total_score"] += question_result["average_score"]
                 
-                # 添加到结果中
-                result['questions'].append(question_result)
+                # 更新进度 - 只基于当前处理的题目数量计算进度
+                current_question_index = i + 1  # 当前处理到第几个题目（从1开始）
+                if progress_callback:
+                    try:
+                        # 确保进度不超过100%
+                        progress = min(int((current_question_index) / len(transformed_questions) * 100), 100)
+                        progress_callback(progress)
+                        logger.debug(f"更新进度: {progress}% ({current_question_index}/{len(transformed_questions)})")
+                    except Exception as e:
+                        logger.error(f"执行进度回调时出错: {e}")
                 
-                # 累加到总分
-                result['total_score'] += avg_score
+                # 每评估完一道题目就立即检查任务是否被取消
+                if check_if_cancelled():
+                    logger.info(f"任务 {task_id} 已被取消，评估完第 {i+1} 题后中止")
+                    # 保存当前评估结果
+                    try:
+                        with open(output_file, 'w', encoding='utf-8') as f:
+                            json.dump(result, f, ensure_ascii=False, indent=2)
+                        logger.info(f"已保存中间评估结果到: {output_file}")
+                    except Exception as e:
+                        logger.error(f"保存中间评估结果时出错: {e}")
+                    return
                 
+                # 每隔5个题目保存一次中间结果，或者是最后一个题目
+                if (i + 1) % 5 == 0 or (i + 1) == len(transformed_questions):
+                    try:
+                        # 计算平均分
+                        if 'total_scores' in result:
+                            for method_key, method_data in result['total_scores'].items():
+                                if method_data['count'] > 0:
+                                    method_data['average'] = method_data['score'] / method_data['count']
+                        
+                        with open(output_file, 'w', encoding='utf-8') as f:
+                            json.dump(result, f, ensure_ascii=False, indent=2)
+                        logger.info(f"已保存中间评估结果 ({i+1}/{len(transformed_questions)})")
+                    except Exception as e:
+                        logger.error(f"保存中间评估结果时出错: {e}")
             except Exception as e:
-                logger.error(f"评估题目 {question_id} 时解析结果出错: {e}", exc_info=True)
-                # 创建失败的结果记录
-                question_result = {
+                logger.error(f"评估题目 {question_id} 时出错: {e}", exc_info=True)
+                error_score = {
                     'original_id': question_id,
-                    'error': str(e),
-                    'transformed_versions': [],
-                    'average_score': 0
+                    'error': str(e)
                 }
-                result['questions'].append(question_result)
+                result['questions'].append(error_score)
             
-            # 更新进度
-            if progress_callback:
-                progress = int((i+1) / len(transformed_questions) * 100)
-                progress_callback(progress)
-                logger.debug(f"评估进度: {progress}%")
-                
             # 每5个题目保存一次中间结果
             if (i+1) % 5 == 0:
                 with open(output_file, 'w', encoding='utf-8') as f:
@@ -505,10 +626,14 @@ def evaluate_questions(source_file, transformed_file, output_file, progress_call
                 
         # 计算总平均分
         if result['questions']:
+            # 删除不需要的total_scores字段
+            if 'total_scores' in result:
+                del result['total_scores']
+                
             result['average_score'] = result['total_score'] / len(result['questions'])
         else:
             result['average_score'] = 0
-        
+            
         # 保存最终结果
         with open(output_file, 'w', encoding='utf-8') as f:
             json.dump(result, f, ensure_ascii=False, indent=2)
@@ -554,25 +679,20 @@ def main():
     parser.add_argument('output_file', help='评估结果输出文件路径')
     args = parser.parse_args()
     
-    # 设置日志
-    handler = logging.StreamHandler(sys.stdout)
-    handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s: %(message)s'))
-    
-    # 设置文件处理器，确保使用UTF-8编码
+    # 设置日志，只保存到文件，不输出到终端
     file_handler = logging.FileHandler('evaluator_standalone.log', encoding='utf-8')
     file_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s: %(message)s'))
     
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
-    logger.addHandler(handler)
     logger.addHandler(file_handler)
 
     # 执行评估
     success = evaluate_questions(args.source_file, args.transformed_file, args.output_file)
     if success:
-        print(f"评估成功完成，结果已保存到: {args.output_file}")
+        logger.info(f"评估成功完成，结果已保存到: {args.output_file}")
     else:
-        print("评估过程中出现错误，请查看日志了解详情。")
+        logger.error("评估过程中出现错误，请查看日志了解详情。")
 
 
 if __name__ == "__main__":
