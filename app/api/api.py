@@ -16,8 +16,8 @@ import glob
 from dotenv import load_dotenv
 from collections import deque
 import numpy as np
+import time
 from typing import List, Dict, Any
-
 # 配置logger
 logger = logging.getLogger(__name__)
 
@@ -825,15 +825,19 @@ def get_bank_questions(bank_id):
                             unique_questions.add(original_id)
                         
                         # 添加变形版本题目
-                        for version in transformed_versions:
+                        for i, version in enumerate(transformed_versions):
+                            # 生成一个确保唯一的题目ID，结合原始ID、变形方法和序号
+                            unique_id = f"{version.get('original_id', original_question.get('id', 'unknown'))}_{version.get('transform_method', '').replace('（','').replace('）','')[:4]}_{i+1}"
+                            
                             transformed_question = {
-                                "id": version.get("original_id", original_question.get("id", "unknown")),
+                                "id": unique_id, # 使用唯一ID而不是原始ID
+                                "original_id": version.get("original_id", original_question.get("id", "unknown")),
                                 "type": version.get("type", original_question.get("type", "unknown")),
                                 "question": version.get("question", ""),
                                 "answer": version.get("answer", ""),
                                 "transform_method": version.get("transform_method", "未知"),
                                 "difficulty": version.get("difficulty", "中等"),
-                                "title": f"{original_question.get('id', 'unknown')} - {version.get('transform_method', '未知变形')}" # 添加标题字段用于显示
+                                "title": f"{original_question.get('id', 'unknown')} - ({version.get('transform_method', '未知变形')})" # 添加标题字段用于显示
                             }
                             
                             # 处理选项
@@ -853,15 +857,19 @@ def get_bank_questions(bank_id):
                         data['metadata']['total_transformed_versions'] = total_transformed
                 else:
                     # 老式变形题库直接包含题目列表
-                    for item in data:
+                    for i, item in enumerate(data):
+                        # 为老式变形题库也创建唯一ID
+                        unique_id = f"{item.get('original_id', 'unknown')}_{item.get('transform_method', '').replace('（','').replace('）','')[:4]}_{i+1}"
+                        
                         question = {
-                            "id": item.get("original_id", "unknown"),
+                            "id": unique_id, # 使用唯一ID
+                            "original_id": item.get("original_id", "unknown"),
                             "type": item["type"],
                             "question": item["question"],
                             "answer": item["answer"],
                             "transform_method": item["transform_method"],
                             "difficulty": item["difficulty"],
-                            "title": f"{item.get('original_id', 'unknown')} - {item.get('transform_method', '未知变形')}" # 添加标题字段
+                            "title": f"{item.get('original_id', 'unknown')} - ({item.get('transform_method', '未知变形')})" # 标题显示方式一致
                         }
                         if item["type"] == "choice":
                             options = item["options"].split("；") if "；" in item["options"] else item["options"].split(";")
@@ -1265,6 +1273,33 @@ def delete_task_endpoint(task_id):
             task_info = tasks[task_id]
             original_status = task_info['status']
             try:
+                # 如果任务正在运行，需要先通过文件设置标记让任务停止
+                if original_status in ['transforming', 'evaluating', 'running']:
+                    app.logger.info(f"任务 {task_id} 正在运行中，尝试设置终止标记")
+                    # 导入相关函数和常量
+                    sys.path.append(os.path.join(APP_DIR, 'modules', 'transformer'))
+                    from transformer import update_task_status as transformer_update_status
+                    from transformer import TASK_STATUS as TRANSFORMER_TASK_STATUS
+                    
+                    # 设置任务状态为CANCELLED，使任务线程能够检测到并退出
+                    transformer_update_status(task_id, TRANSFORMER_TASK_STATUS['CANCELLED'], "任务被手动取消")
+                    
+                    # 等待一小段时间让任务线程有机会退出
+                    time.sleep(0.5)
+                    
+                    # 尝试释放文件锁
+                    try:
+                        lock_path = os.path.join(
+                            os.path.dirname(os.path.abspath(__file__)), 
+                            '../logs/transformed_logs/tasks.json.lock'
+                        )
+                        if os.path.exists(lock_path):
+                            app.logger.info(f"尝试删除文件锁: {lock_path}")
+                            os.remove(lock_path)
+                            app.logger.info(f"已删除文件锁: {lock_path}")
+                    except Exception as e:
+                        app.logger.error(f"删除文件锁失败: {e}", exc_info=True)
+                
                 # 尝试删除相关文件
                 transformed_file = task_info.get('transformed_file')
                 if transformed_file:
@@ -1287,7 +1322,14 @@ def delete_task_endpoint(task_id):
                     app.logger.info(f"已从等待队列中删除任务 {task_id}")
                 except ValueError:
                     pass
-                # 如果任务正在运行，不减少 running_task_count（线程结束时会处理计数器）
+                
+                # 如果任务正在运行，减少 running_task_count
+                if original_status in ['transforming', 'evaluating', 'running']:
+                    running_task_count -= 1
+                    if running_task_count < 0:
+                        running_task_count = 0
+                    app.logger.info(f"已减少运行任务计数，当前值: {running_task_count}")
+                    
                 save_tasks()
                 app.logger.info(f"Attempting to start next task after deleting {task_id}.")
                 threading.Timer(0.1, start_next_task).start()

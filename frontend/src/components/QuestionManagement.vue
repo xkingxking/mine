@@ -45,14 +45,16 @@
             <div class="bank-title">
               <h3>{{ bank.name }}</h3>
               <div class="bank-id">ID: {{ bank.id }}</div>
-              <el-tag 
-                v-for="dimension in bank.dimensions.split(', ')" 
-                :key="dimension"
-                :type="dimension === '学科综合能力' ? 'success' : 'primary'"
-                class="dimension-tag"
-              >
-                {{ dimension }}
-              </el-tag>
+              <div class="dimension-tags-wrapper">
+                <el-tag 
+                  v-for="dimension in bank.dimensions.split(', ')" 
+                  :key="dimension"
+                  :type="dimension === '学科综合能力' ? 'success' : 'primary'"
+                  class="dimension-tag"
+                >
+                  {{ dimension }}
+                </el-tag>
+              </div>
             </div>
             </div>
           </div>
@@ -106,14 +108,16 @@
             <div class="bank-title">
               <h3>{{ bank.name }}</h3>
               <div class="bank-id">ID: {{ bank.id }}</div>
-              <el-tag 
-                v-for="dimension in bank.dimensions.split(', ')" 
-                :key="dimension"
-                type="primary"
-                class="dimension-tag"
-              >
-                {{ dimension }}
-              </el-tag>
+              <div class="dimension-tags-wrapper">
+                <el-tag 
+                  v-for="dimension in bank.dimensions.split(', ')" 
+                  :key="dimension"
+                  type="primary"
+                  class="dimension-tag"
+                >
+                  {{ dimension }}
+                </el-tag>
+              </div>
             </div>
             </div>
           </div>
@@ -167,7 +171,7 @@
             <div class="bank-title">
               <h3>{{ bank.name }}</h3>
               <div class="bank-id">ID: {{ bank.id }}</div>
-              <div class="transform-methods">
+              <div class="dimension-tags-wrapper">
                 <el-tag 
                   v-for="method in bank.transform_methods" 
                   :key="method"
@@ -958,6 +962,9 @@ const maxRadarValue = radarData.length ?
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   position: relative;
   padding-bottom: 70px; /* 为固定按钮留出空间 */
+  min-width: 300px;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .bank-card:hover {
@@ -970,18 +977,31 @@ const maxRadarValue = radarData.length ?
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 1rem;
+  width: 100%;
+  overflow: hidden;
+}
+
+.bank-header .bank-header {
+  width: 100%;
+  overflow: hidden;
 }
 
 .bank-title {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  width: 100%;
+  overflow: hidden;
 }
 
 .bank-title h3 {
   margin: 0;
   color: #2d3748;
   font-size: 1.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .bank-id {
@@ -1228,6 +1248,10 @@ const maxRadarValue = radarData.length ?
 .dimension-tag {
   margin-right: 0.5rem;
   margin-bottom: 0.5rem;
+  max-width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Card Effects */
@@ -1310,5 +1334,23 @@ const maxRadarValue = radarData.length ?
 
 .generate-form .el-radio-group {
   margin-bottom: 10px;
+}
+
+/* New styles for dimension tags */
+.dimension-tags-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+/* 为method-tag添加同样的样式控制 */
+.method-tag {
+  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
+  max-width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style> 
