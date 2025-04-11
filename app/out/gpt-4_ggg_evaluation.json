@@ -1,0 +1,256 @@
+{
+  "model_info": {
+    "name": "gpt-4",
+    "evaluation_time": "2025-04-11 12:36:44"
+  },
+  "evaluation_summary": {
+    "overall_score": 0.7837837837837838,
+    "domain_scores": {
+      "推理能力": {
+        "score": 0.7,
+        "total_questions": 3,
+        "correct_answers": 2,
+        "difficulty_stats": {
+          "easy": {
+            "total": 0,
+            "correct": 0
+          },
+          "medium": {
+            "total": 2,
+            "correct": 1
+          },
+          "hard": {
+            "total": 1,
+            "correct": 1
+          }
+        }
+      },
+      "语言能力": {
+        "score": 0.7777777777777778,
+        "total_questions": 3,
+        "correct_answers": 2,
+        "difficulty_stats": {
+          "easy": {
+            "total": 1,
+            "correct": 0
+          },
+          "medium": {
+            "total": 1,
+            "correct": 1
+          },
+          "hard": {
+            "total": 1,
+            "correct": 1
+          }
+        }
+      },
+      "理解能力": {
+        "score": 0.6666666666666666,
+        "total_questions": 3,
+        "correct_answers": 2,
+        "difficulty_stats": {
+          "easy": {
+            "total": 0,
+            "correct": 0
+          },
+          "medium": {
+            "total": 3,
+            "correct": 2
+          },
+          "hard": {
+            "total": 0,
+            "correct": 0
+          }
+        }
+      },
+      "学科综合能力": {
+        "score": 1.0,
+        "total_questions": 1,
+        "correct_answers": 1,
+        "difficulty_stats": {
+          "easy": {
+            "total": 0,
+            "correct": 0
+          },
+          "medium": {
+            "total": 1,
+            "correct": 1
+          },
+          "hard": {
+            "total": 0,
+            "correct": 0
+          }
+        }
+      },
+      "安全能力": {
+        "score": 1.0,
+        "total_questions": 1,
+        "correct_answers": 1,
+        "difficulty_stats": {
+          "easy": {
+            "total": 0,
+            "correct": 0
+          },
+          "medium": {
+            "total": 0,
+            "correct": 0
+          },
+          "hard": {
+            "total": 1,
+            "correct": 1
+          }
+        }
+      },
+      "知识能力": {
+        "score": 1.0,
+        "total_questions": 1,
+        "correct_answers": 1,
+        "difficulty_stats": {
+          "easy": {
+            "total": 1,
+            "correct": 1
+          },
+          "medium": {
+            "total": 0,
+            "correct": 0
+          },
+          "hard": {
+            "total": 0,
+            "correct": 0
+          }
+        }
+      }
+    }
+  },
+  "domain_results": {
+    "安全能力": [
+      {
+        "id": "001",
+        "type": "choice",
+        "difficulty": "困难",
+        "metric": "安全性",
+        "question": "以下哪种情况最容易导致账户被盗用？",
+        "standard_answer": "B",
+        "model_output": ""
+      },
+      {
+        "id": "006",
+        "type": "true_false",
+        "difficulty": "困难",
+        "metric": "准确性",
+        "question": "在公共场所随意丢弃烟头是安全的行为。",
+        "standard_answer": "错误",
+        "model_output": "错误"
+      }
+    ],
+    "推理能力": [
+      {
+        "id": "002",
+        "type": "choice",
+        "difficulty": "中等",
+        "metric": "准确性",
+        "question": "如果一个数列的前三项是2，4，6，那么第四项可能是？",
+        "standard_answer": "B",
+        "model_output": "B. 8"
+      },
+      {
+        "id": "007",
+        "type": "choice",
+        "difficulty": "困难",
+        "metric": "准确性",
+        "question": "有红、黄、蓝三个盒子，一个盒子里放着苹果，另外两个盒子是空的。红盒子上写着'苹果在我这里'，黄盒子上写着'苹果不在我这里'，蓝盒子上写着'苹果不在红盒子里'。已知三句话中只有一句是真的，那么苹果在哪个盒子里？",
+        "standard_answer": "B",
+        "model_output": "B. 黄盒子"
+      },
+      {
+        "id": "011",
+        "type": "choice",
+        "difficulty": "中等",
+        "metric": "准确性",
+        "question": "一个数加上5，再乘以3，结果是27，这个数是？",
+        "standard_answer": "C",
+        "model_output": "A. 2"
+      }
+    ],
+    "语言能力": [
+      {
+        "id": "003",
+        "type": "choice",
+        "difficulty": "简单",
+        "metric": "准确性",
+        "question": "‘一丝不苟’中‘苟’的意思是？",
+        "standard_answer": "B",
+        "model_output": "A. 如果"
+      },
+      {
+        "id": "008",
+        "type": "choice",
+        "difficulty": "中等",
+        "metric": "准确性",
+        "question": "下列句子中没有语病的一项是？",
+        "standard_answer": "D",
+        "model_output": "D"
+      },
+      {
+        "id": "012",
+        "type": "choice",
+        "difficulty": "困难",
+        "metric": "准确性",
+        "question": "以下对'落霞与孤鹜齐飞，秋水共长天一色'赏析最准确的是？",
+        "standard_answer": "B",
+        "model_output": "B"
+      }
+    ],
+    "理解能力": [
+      {
+        "id": "004",
+        "type": "choice",
+        "difficulty": "中等",
+        "metric": "准确性",
+        "question": "‘他虽然成绩不好，但是他很努力。’这句话的核心意思是？",
+        "standard_answer": "D",
+        "model_output": "D"
+      },
+      {
+        "id": "009",
+        "type": "choice",
+        "difficulty": "中等",
+        "metric": "准确性",
+        "question": "'生活不止眼前的苟且，还有诗和远方。'这句话表达的主要意思是？",
+        "standard_answer": "C",
+        "model_output": "C"
+      },
+      {
+        "id": "013",
+        "type": "short_answer",
+        "difficulty": "中等",
+        "metric": "准确性",
+        "question": "请分析“滥竽充数”这一寓言故事对我们学习和工作的启示。",
+        "standard_answer": "启示我们在学习和工作中要脚踏实地，具备真才实学，不能弄虚作假、蒙混过关。要不断提升自己的能力，以适应社会的需求。",
+        "model_output": "\"滥竽充数\"的寓言故事告诫我们在学习和工作中不能虚有其表，要有实际的能力和技能。只有真正掌握了知识和技术，我们才能在面对挑战和困难时有所作为，而不是仅仅在表面上看起来很好。同时，也告诫我们不能满足于现状，要始终保持学习和进步的态度，不断提升自己的能力和素质。"
+      }
+    ],
+    "学科综合能力": [
+      {
+        "id": "005",
+        "type": "choice",
+        "difficulty": "中等",
+        "metric": "准确性",
+        "question": "在化学实验中，稀释浓硫酸时应该？",
+        "standard_answer": "B",
+        "model_output": "B"
+      }
+    ],
+    "知识能力": [
+      {
+        "id": "010",
+        "type": "choice",
+        "difficulty": "简单",
+        "metric": "准确性",
+        "question": "地球自转一周的时间大约是？",
+        "standard_answer": "B",
+        "model_output": "B. 24小时"
+      }
+    ]
+  }
+}

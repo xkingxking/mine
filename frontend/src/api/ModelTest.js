@@ -15,7 +15,7 @@ export function createTest(data) {
     url: '/api/v1/evaluate',
     method: 'post',
     data,
-    timeout: 300000, // 设置超时时间为 5 分钟
+    timeout: 6000000, // 设置超时时间为 5 分钟
     headers: {
       'Content-Type': 'application/json'
     }

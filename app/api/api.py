@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 from collections import deque
 import numpy as np
 import time
-
+from typing import List, Dict, Any
 # 配置logger
 logger = logging.getLogger(__name__)
 
@@ -976,9 +976,33 @@ def generate_question_bank():
         return jsonify({"success": False, "error": str(e), "message": "生成过程中发生错误"}), 500
 
 
-# --- 模型评估相关路由 ---
+def convert_to_native_types(obj):
+    """将 numpy 类型转换为 Python 原生类型
+    
+    Args:
+        obj: 需要转换的对象
+        
+    Returns:
+        转换后的对象
+    """
+    if isinstance(obj, np.float32) or isinstance(obj, np.float64):
+        return float(obj)
+    elif isinstance(obj, np.bool_):
+        return bool(obj)
+    elif isinstance(obj, dict):
+        return {key: convert_to_native_types(value) for key, value in obj.items()}
+    elif isinstance(obj, (list, tuple)):
+        return [convert_to_native_types(item) for item in obj]
+    return obj
+
+
 @app.route('/api/v1/evaluate', methods=['POST'])
 async def evaluate_model():
+    """评估模型
+    
+    Returns:
+        Dict[str, Any]: 评估结果
+    """
     try:
         data = request.json
         model_name = data.get('model_name')
@@ -987,63 +1011,90 @@ async def evaluate_model():
         parameters = data.get('parameters', {})
         proxy = data.get('proxy')
         
+        # 检查必要参数
         if not model_name or not questions:
             return jsonify({"error": "缺少必要参数"}), 400
             
+        # 初始化评估管理器
         evaluation_manager = EvaluationManager()
-        logger.info(f"开始评估，共 {len(questions)} 个问题")
         
+        # 处理每个问题
         for question in questions:
             try:
-                model_output = await get_model_output(question, model_name, proxy)
-                logger.info(f"处理问题: {question.get('id', 'unknown')}")
-                
-                evaluation_results = await evaluate_response(
-                    model_output=model_output,
-                    standard_answer=question.get("answer"),
-                    difficulty=question.get("难度级别", "中等"),
-                    domain=question.get("题目领域", "通用"),
-                    question_type=question.get("type", "choice")
+                # 获取模型输出
+                model_output = await get_model_output(
+                    question,
+                    model_name,
+                    proxy
                 )
                 
-                logger.info(f"问题评估结果: {evaluation_results}")
+                # 保存模型输出到问题字典中
+                question["model_output"] = model_output
                 
-                # 确保发送到前端的数据已经转换
+                # 获取难度级别，默认为"中等"
+                difficulty = question.get("难度级别", "中等")
+                if isinstance(difficulty, str):
+                    difficulty = difficulty.strip()  # 去除可能的空格
+                
+                # 评估模型输出
+                evaluation_results = await evaluation_manager.evaluate_response(
+                    model_output=model_output,
+                    standard_answer=question["answer"],
+                    domain=question.get("题目领域", "通用"),
+                    question_type=question.get("type", "choice"),
+                    difficulty=difficulty
+                )
+                
+                # 转换评估结果中的数据类型
+                converted_results = convert_to_native_types(evaluation_results)
+                
+                # 发送评估结果到前端，包含问题和模型输出
                 socketio.emit('evaluation_result', {
-                    'question_id': question.get('id', 'unknown'),
+                    'question_id': question['id'],
                     'question': question.get('question', ''),
                     'model_output': model_output,
-                    'accuracy_score': float(evaluation_results['accuracy']['accuracy_score']),
-                    'is_accurate': bool(evaluation_results['accuracy']['is_accurate'])
+                    'accuracy_score': converted_results['accuracy']['accuracy_score'],
+                    'is_accurate': bool(converted_results['accuracy']['is_accurate']),  # 确保转换为 Python bool
+                    'choices': question.get('choices', {}) if question.get('type') == 'choice' else None  # 如果是选择题，添加选项
                 })
                 
             except Exception as e:
-                logger.error(f"处理问题时出错: {str(e)}")
+                print(f"处理问题 {question.get('id', 'unknown')} 时出错: {str(e)}")
                 continue
-                
+        
         # 获取评估摘要
         evaluation_summary = evaluation_manager.get_evaluation_summary()
-        logger.info(f"评估摘要: {evaluation_summary}")
+        
+        # 转换评估摘要中的数据类型
+        converted_summary = convert_to_native_types(evaluation_summary)
         
         # 生成报告
-        report_generator = ReportGenerator(settings.OUTPUT_DIR)
+        report_generator = ReportGenerator(settings.OUTPUT_DIR)  # 使用配置的输出目录
         report = report_generator.generate_report(
-            evaluation_summary=evaluation_summary,
+            evaluation_summary=converted_summary,
             model_name=model_name,
             questions=questions
         )
         
         # 保存报告
-        report_path = report_generator.save_report(report, model_name, dataset_path)
-        logger.info(f"报告已保存: {report_path}")
+        report_path = report_generator.save_report(
+            report=report,
+            model_name=model_name,
+            dataset_name=dataset_path
+        )
         
+        # 确保报告文件存在
+        if not report_path.exists():
+            raise FileNotFoundError(f"报告文件未成功保存: {report_path}")
+            
         return jsonify({
             "status": "success",
+            "message": "评估完成",
             "report_path": str(report_path)
         })
         
     except Exception as e:
-        logger.error(f"评估过程出错: {str(e)}")
+        print(f"评估过程中出错: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -1501,35 +1552,7 @@ def handle_disconnect():
     logging.info('客户端已断开连接')
 
 
-def evaluate_response(model_output, standard_answer, difficulty="中等", domain="通用", question_type="choice"):
-    try:
-        evaluation_manager = EvaluationManager()
-        result = evaluation_manager.evaluate_response(
-            model_output=model_output,
-            standard_answer=standard_answer,
-            difficulty=difficulty,
-            domain=domain,
-            question_type=question_type
-        )
-        
-        # 转换所有数值类型
-        if isinstance(result, dict):
-            for key, value in result.items():
-                if isinstance(value, (np.float32, np.float64)):
-                    result[key] = float(value)
-                elif isinstance(value, dict):
-                    for sub_key, sub_value in value.items():
-                        if isinstance(sub_value, (np.float32, np.float64)):
-                            result[key][sub_key] = float(sub_value)
-                        elif isinstance(sub_value, dict):
-                            for sub_sub_key, sub_sub_value in sub_value.items():
-                                if isinstance(sub_sub_value, (np.float32, np.float64)):
-                                    result[key][sub_key][sub_sub_key] = float(sub_sub_value)
-        
-        return result
-    except Exception as e:
-        logger.error(f"处理问题时出错: {str(e)}")
-        raise
+
 
 
 @app.route('/api/logs/clear', methods=['POST'])

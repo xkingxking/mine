@@ -31,7 +31,13 @@ class QuestionLoader:
             "chinese_literature": "中国文学",
             "chinese_history": "中国历史",
             "humaneval": "编程",
-            "safety": "安全"
+            "safety": "安全",
+            "reasoning": "推理能力",
+            "security": "安全能力",
+            "knowledge": "知识能力",
+            "comprehension": "理解能力",
+            "language": "语言能力",
+            "interdisciplinary": "学科综合能力"
         }
         
         for key, value in domain_map.items():
