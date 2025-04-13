@@ -110,7 +110,7 @@ def find_font_file(font_name):
     
     for path in possible_paths:
         if os.path.exists(path):
-            logger.info(f"找到字体文件: {path}")
+            logger.debug(f"找到字体文件: {path}")
             return path
     
     logger.warning(f"未找到字体文件: {font_name}")
@@ -130,7 +130,7 @@ def register_chinese_font():
             try:
                 font_name = os.path.splitext(font_file)[0]  # 去掉扩展名
                 pdfmetrics.registerFont(TTFont(font_name, font_path))
-                logger.info(f"成功注册中文字体: {font_name} ({font_path})")
+                logger.debug(f"成功注册中文字体: {font_name} ({font_path})")
                 return font_name  # 返回成功注册的字体名称
             except Exception as e:
                 logger.error(f"注册字体 {font_file} 失败: {str(e)}")
