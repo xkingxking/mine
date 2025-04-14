@@ -1,0 +1,43 @@
+{
+  "model_info": {
+    "name": "deepseek-v3",
+    "evaluation_time": "2025-04-14 20:23:58"
+  },
+  "evaluation_summary": {
+    "overall_score": 1.0,
+    "domain_scores": {
+      "语言能力": {
+        "score": 1.0,
+        "total_questions": 1,
+        "correct_answers": 1,
+        "difficulty_stats": {
+          "easy": {
+            "total": 1,
+            "correct": 1
+          },
+          "medium": {
+            "total": 0,
+            "correct": 0
+          },
+          "hard": {
+            "total": 0,
+            "correct": 0
+          }
+        }
+      }
+    }
+  },
+  "domain_results": {
+    "语言能力": [
+      {
+        "id": "001",
+        "type": "true_false",
+        "difficulty": "简单",
+        "metric": "准确性",
+        "question": "\"Hello\" 的中文翻译是 \"你好\"。",
+        "standard_answer": "正确",
+        "model_output": "正确"
+      }
+    ]
+  }
+}

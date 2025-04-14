@@ -1,0 +1,26 @@
+{
+  "metadata": {
+    "version": "1.1",
+    "generated_at": "2025-04-14T20:23:22.551422",
+    "total": 1,
+    "dimensions": [
+      "语言能力"
+    ],
+    "difficulty_distribution": {
+      "简单": 1,
+      "中等": 0,
+      "困难": 0
+    }
+  },
+  "questions": [
+    {
+      "id": "001",
+      "type": "true_false",
+      "题目领域": "语言能力",
+      "测试指标": "准确性",
+      "难度级别": "简单",
+      "question": "\"Hello\" 的中文翻译是 \"你好\"。",
+      "answer": "正确"
+    }
+  ]
+}

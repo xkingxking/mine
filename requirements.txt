@@ -1,56 +1,16 @@
-# Web框架
-flask>=2.0.0
-flask-cors>=3.0.0
-fastapi>=0.68.0
-uvicorn>=0.15.0
-python-multipart>=0.0.5
-aiofiles>=0.7.0
-
-# 数据处理和可视化
-pandas>=1.3.0
-numpy>=1.21.0
-matplotlib>=3.4.0
-seaborn>=0.11.0
-reportlab>=4.0.0  # 用于PDF报告生成
-
-# 机器学习相关
-scikit-learn>=0.24.0
-transformers>=4.30.0
-torch>=2.0.0
-sentence-transformers>=2.2.0  # 语义相似度模型
-rouge>=1.0.1  # 文本评估指标
-nltk>=3.8.0  # 自然语言处理工具包
-
-# API和HTTP
-aiohttp>=3.8.0
-requests>=2.26.0
-beautifulsoup4>=4.9.3
-
-# 配置和环境变量
-pydantic>=1.8.0
-pydantic-settings>=2.0.0
-python-dotenv>=0.19.0
-
-# 模板引擎
-jinja2>=3.0.0
-
-# 安全相关
-python-jose>=3.3.0
-passlib>=1.7.4
-bcrypt>=3.2.0
-
-# 测试相关
-pytest>=7.0.0
-pytest-asyncio>=0.21.0
-pytest-cov>=4.0.0
-
-# 监控和日志
-prometheus-client>=0.12.0
-
-# 任务队列
-redis>=4.5.0
-celery>=5.3.0
-
-# 新增依赖
-openai>=1.0.0
-tqdm>=4.65.0  # 进度条显示 
+Flask
+Flask-Cors
+Flask-SocketIO
+python-dotenv
+numpy
+mmengine
+pydantic
+transformers
+torch
+openai
+pydantic-settings
+aiohttp
+aiohttp-socks
+sentence-transformers
+jieba
+reportlab
