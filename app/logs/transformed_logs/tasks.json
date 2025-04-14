@@ -1,0 +1,17 @@
+{
+  "general_transformed": {
+    "id": "general_transformed",
+    "name": "general_transformed",
+    "source_file": "general.json",
+    "created_at": "2025-04-11T01:07:20.777317",
+    "status": "completed",
+    "progress": 100,
+    "ip_address": "127.0.0.1",
+    "updated_at": "2025-04-11T10:17:39.735709",
+    "message": null,
+    "error": null,
+    "completed_at": "2025-04-11T10:17:39.735709",
+    "transformed_file": "transformed_general_transformed.json",
+    "evaluate_file": "evaluate_general_transformed.json"
+  }
+}

@@ -6,7 +6,7 @@ from .chatgpt_model import ChatGPTModel
 from .doubao_model import DoubaoModel
 from .qwen_model import QwenModel
 from .llama_model import LlamaModel
-from .gemini_model import GeminiModel
+# from .gemini_model import GeminiModel
 
 
 # 注册所有模型
@@ -14,7 +14,7 @@ from .gemini_model import GeminiModel
 # ModelFactory.register_model("perspective", PerspectiveModel)
 ModelFactory.register_model("deepseek-v3", DeepseekModel)
 ModelFactory.register_model("gpt-4", ChatGPTModel)
-ModelFactory.register_model("gemini-pro", GeminiModel)
+# ModelFactory.register_model("gemini-pro", GeminiModel)
 ModelFactory.register_model("doubao-1.5-pro-32k", DoubaoModel)
 ModelFactory.register_model("qwen-max", QwenModel)
 ModelFactory.register_model("llama-2", LlamaModel)
@@ -30,5 +30,5 @@ __all__ = [
     "DoubaoModel",
     "QwenModel",
     "LlamaModel",
-    "GeminiModel",
+    # "GeminiModel",
 ] 
