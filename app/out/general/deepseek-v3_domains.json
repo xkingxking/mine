@@ -1,7 +1,7 @@
 {
   "model_info": {
     "name": "deepseek-v3",
-    "last_update": "2025-04-14 20:23:58"
+    "last_update": "2025-04-14 20:39:02"
   },
   "domains": {
     "安全能力": {
@@ -83,10 +83,16 @@
           "timestamp": "2025-04-14 20:06:18",
           "total_questions": 1,
           "correct_answers": 1
+        },
+        {
+          "score": 1.0,
+          "timestamp": "2025-04-14 20:39:02",
+          "total_questions": 1,
+          "correct_answers": 1
         }
       ],
-      "average_score": 0.9473684210526316,
-      "total_evaluations": 2
+      "average_score": 0.9649122807017544,
+      "total_evaluations": 3
     }
   }
 }

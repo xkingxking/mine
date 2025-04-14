@@ -87,16 +87,7 @@ for domain in compare["domains"]:
         s = compare["scores"].get(model, {}).get(domain, {})
         print(f"   模型 {model}: 平均分={s.get('average_score')}, 数量={s.get('total_evaluations')}")
 
-# 11. 删除变形任务
-try:
-    delete_result = sdk.delete_transform_task("sdk_test_task")
-    print("\n=== 删除任务 ===")
-    print("删除结果:", delete_result)
-except Exception as e:
-    print("\n=== 删除任务失败 ===")
-    print(f"错误信息: {str(e)}")
-
-# 12. 删除题库
+# 11. 删除题库
 try:
     delete_bank_result = sdk.delete_question_bank(bank_id)
     print("\n=== 删除题库 ===")
@@ -105,3 +96,13 @@ except Exception as e:
     print("\n=== 删除题库失败 ===")
     print(f"错误信息: {str(e)}")
     print("提示: 题库可能已经被删除或不存在")
+
+# 12. 删除变形任务
+try:
+    delete_result = sdk.delete_transform_task("sdk_test_task")
+    print("\n=== 删除任务 ===")
+    print("删除结果:", delete_result)
+except Exception as e:
+    print("\n=== 删除任务失败 ===")
+    print(f"错误信息: {str(e)}")
+    print("提示: 任务可能已经被删除或不存在")
