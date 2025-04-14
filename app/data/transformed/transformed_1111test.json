@@ -1,0 +1,108 @@
+{
+  "metadata": {
+    "version": "1.1",
+    "generated_at": "2025-04-07T22:40:17.154945",
+    "total": 10,
+    "dimensions": [
+      "医学",
+      "法学"
+    ],
+    "difficulty_distribution": {
+      "简单": 4,
+      "中等": 3,
+      "困难": 3
+    }
+  },
+  "transformed_at": "2025-04-14T16:55:58.878262",
+  "source_file": "10_questions.json",
+  "questions": [
+    {
+      "original_question": {
+        "id": "001",
+        "type": "true_false",
+        "题目领域": "法学",
+        "测试指标": "准确性",
+        "难度级别": "简单",
+        "question": "根据《中华人民共和国宪法》，中华人民共和国的一切权力属于人民。",
+        "answer": "正确"
+      },
+      "transformed_versions": [
+        {
+          "transform_method": "语序调整",
+          "difficulty": "简单",
+          "question": "中华人民共和国的一切权力属于人民，这是根据《中华人民共和国宪法》规定的。",
+          "options": {},
+          "answer": "正确",
+          "type": "true_false",
+          "original_id": "001",
+          "parsing_warnings": []
+        },
+        {
+          "transform_method": "条件变化",
+          "difficulty": "中等",
+          "question": "根据《中华人民共和国宪法》，除法律另有规定外，中华人民共和国的一切权力属于人民。",
+          "options": {},
+          "answer": "正确",
+          "type": "true_false",
+          "original_id": "001",
+          "parsing_warnings": []
+        },
+        {
+          "transform_method": "表达方式转换",
+          "difficulty": "简单",
+          "question": "《中华人民共和国宪法》明确规定，人民拥有中华人民共和国的一切权力。",
+          "options": {},
+          "answer": "正确",
+          "type": "true_false",
+          "original_id": "001",
+          "parsing_warnings": []
+        },
+        {
+          "transform_method": "正反对比",
+          "difficulty": "中等",
+          "question": "以下哪一项符合《中华人民共和国宪法》的规定？A.中华人民共和国的一切权力属于人民。B.中华人民共和国的一切权力属于政府。",
+          "options": {},
+          "answer": "A",
+          "type": "true_false",
+          "original_id": "001",
+          "parsing_warnings": []
+        },
+        {
+          "transform_method": "情境补充",
+          "difficulty": "简单",
+          "question": "在一次宪法学习讨论会上，老师提问：“根据《中华人民共和国宪法》，中华人民共和国的一切权力属于谁？”请判断以下回答是否正确：“中华人民共和国的一切权力属于人民。”",
+          "options": {},
+          "answer": "正确",
+          "type": "true_false",
+          "original_id": "001",
+          "parsing_warnings": []
+        },
+        {
+          "transform_method": "考点拓展",
+          "difficulty": "简单",
+          "question": "根据《中华人民共和国宪法》，中华人民共和国的最高国家权力机关是什么？",
+          "options": {},
+          "answer": "全国人民代表大会",
+          "type": "true_false",
+          "original_id": "001",
+          "parsing_warnings": []
+        },
+        {
+          "transform_method": "题型更改",
+          "difficulty": "简单",
+          "question": "根据《中华人民共和国宪法》，中华人民共和国的一切权力属于谁？",
+          "options": {
+            "A": "政府",
+            "B": "人民",
+            "C": "中国共产党",
+            "D": "军队"
+          },
+          "answer": "B",
+          "type": "choice",
+          "original_id": "001",
+          "parsing_warnings": []
+        }
+      ]
+    }
+  ]
+}
