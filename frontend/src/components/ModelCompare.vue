@@ -1078,9 +1078,9 @@ const initImprovedTimeChart = () => {
   
   // 将领域按照分数分类
   const categories = [
-    { name: '优秀 (75-90%)', min: 0.75, max: 1, color: COLOR_EXCELLENT },
-    { name: '较差 (40-60%)', min: 0.4, max: 0.75, color: COLOR_AVERAGE },
-    { name: '差 (0-40%)', min: 0, max: 0.4, color: COLOR_POOR }
+    { name: '优秀 (75-100%)', min: 0.75, max: 1, color: COLOR_EXCELLENT },
+    { name: '良好 (60-75%)', min: 0.6, max: 0.75, color: COLOR_AVERAGE },
+    { name: '差 (0-60%)', min: 0, max: 0.6, color: COLOR_POOR }
   ];
   
   // 为每个类别创建数据节点
