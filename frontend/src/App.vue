@@ -16,7 +16,7 @@
             </span>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item>团队介绍：我们是来自西部赛区重庆大学的队伍，致力于开发一个智能化的模型评测系统，旨在通过先进的AI算法和多元数据分析，为用户提供精准的模型评估和决策支持。</el-dropdown-item>
+                <el-dropdown-item>团队介绍：我们是“创创创”队伍，致力于开发一个智能化的模型评测系统，旨在通过先进的AI算法和多元数据分析，为用户提供精准的模型评估和决策支持。</el-dropdown-item>
                 <el-dropdown-item>联系方式：GitHub链接 <a href="https://github.com/xkingxking/mine.git" target="_blank">https://github.com/xkingxking/mine.git</a></el-dropdown-item>
               </el-dropdown-menu>
             </template>
