@@ -1,6 +1,7 @@
 Flask
 Flask-Cors
 Flask-SocketIO
+Flask[async]
 python-dotenv
 numpy
 mmengine
