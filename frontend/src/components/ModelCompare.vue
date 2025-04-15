@@ -755,8 +755,8 @@ export default {
       });
     };
     
-    // 初始化雷达图
-    const initRadarChart = () => {
+   // 初始化雷达图
+   const initRadarChart = () => {
       if (!radarChartRef.value) return;
       
       // 销毁已有实例
@@ -775,10 +775,17 @@ export default {
       
       const seriesData = filteredModels.value.map(model => {
         const dataPoints = filteredDomains.value.map(domain => {
-          const domainData = comparisonData.value.scores[model] 
-            ? comparisonData.value.scores[model][domain] || { average_score: 0 }
-            : { average_score: 0 };
-          return domainData.average_score;
+          const modelScores = comparisonData.value.scores[model];
+          if (!modelScores || !modelScores[domain]) {
+            console.log(`No data for model ${model} in domain ${domain}`);
+            return 0;
+          }
+          const score = modelScores[domain].average_score;
+          if (typeof score !== 'number' || isNaN(score)) {
+            console.log(`Invalid score for model ${model} in domain ${domain}: ${score}`);
+            return 0;
+          }
+          return score;
         });
         
         return {
@@ -796,14 +803,25 @@ export default {
         tooltip: {
           trigger: 'item',
           formatter: function(params) {
-            const domain = indicator[params.dataIndex].name;
-            return `${params.name}<br>${domain}: ${(params.value * 100).toFixed(2)}%`;
+            if (!params.value || !Array.isArray(params.value)) return '';
+            
+            let result = `${params.name}<br>`;
+            params.value.forEach((val, index) => {
+              const domain = indicator[index].name;
+              const score = typeof val === 'number' ? val : 0;
+              result += `${domain}: ${(score * 100).toFixed(2)}%<br>`;
+            });
+            return result;
           }
         },
         legend: {
           type: 'scroll',
           bottom: 10,
-          data: filteredModels.value
+          data: filteredModels.value,
+          selected: filteredModels.value.reduce((acc, model) => {
+            acc[model] = true;
+            return acc;
+          }, {})
         },
         radar: {
           indicator: indicator,
@@ -813,6 +831,12 @@ export default {
             color: '#333',
             fontSize: 12,
             padding: [3, 5]
+          },
+          splitArea: {
+            areaStyle: {
+              color: ['rgba(255,255,255,0.3)',
+                     'rgba(200,200,200,0.1)']
+            }
           }
         },
         series: [
@@ -823,7 +847,14 @@ export default {
                 width: 4
               }
             },
-            data: seriesData
+            data: seriesData,
+            lineStyle: {
+              width: 2
+            },
+            symbolSize: 6,
+            areaStyle: {
+              opacity: 0.2
+            }
           }
         ]
       };
@@ -833,9 +864,19 @@ export default {
       
       // 添加点击事件
       radarChart.on('click', (params) => {
-        if (params.seriesType === 'radar' && params.seriesName) {
-          selectModel(params.seriesName);
+        // 检查是否点击了雷达图的数据系列
+        if (params.componentType === 'series' && params.seriesType === 'radar') {
+          // 获取点击的模型名称
+          const modelName = params.seriesName;
+          if (modelName && filteredModels.value.includes(modelName)) {
+            selectModel(modelName);
+          }
         }
+      });
+
+      // 移除图例点击事件，保持图例只用于显示/隐藏
+      radarChart.on('legendselectchanged', (params) => {
+        // 仅处理显示/隐藏，不触发模型详情
       });
     };
     
