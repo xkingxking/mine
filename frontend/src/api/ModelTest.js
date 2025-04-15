@@ -3,7 +3,7 @@ import request from '@/utils/request'
 // 获取测试任务列表
 export function getTestList(params) {
   return request({
-    url: '/api/v1/tests',
+    url: '/tests',
     method: 'get',
     params
   })
@@ -12,7 +12,7 @@ export function getTestList(params) {
 // 创建测试任务
 export function createTest(data) {
   return request({
-    url: '/api/v1/evaluate',
+    url: '/evaluate',
     method: 'post',
     data,
     timeout: 6000000, // 设置超时时间为 5 分钟
@@ -25,7 +25,7 @@ export function createTest(data) {
 // 获取测试详情
 export function getTestDetail(id) {
   return request({
-    url: `/api/v1/tests/${id}`,
+    url: `/tests/${id}`,
     method: 'get'
   })
 }
@@ -33,7 +33,7 @@ export function getTestDetail(id) {
 // 导出测试报告
 export function exportTestReport(id) {
   return request({
-    url: `/api/v1/tests/${id}/export`,
+    url: `/tests/${id}/export`,
     method: 'get',
     responseType: 'blob'
   })
@@ -42,7 +42,7 @@ export function exportTestReport(id) {
 // 删除测试任务
 export function deleteTest(id) {
   return request({
-    url: `/api/v1/tests/${id}`,
+    url: `/tests/${id}`,
     method: 'delete'
   })
 }
@@ -50,7 +50,7 @@ export function deleteTest(id) {
 // 获取模型列表
 export function getModelList() {
   return request({
-    url: '/api/v1/models',
+    url: '/models',
     method: 'get'
   })
 }

@@ -47,7 +47,7 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 # 配置 CORS
 CORS(app, resources={
     r"/api/*": {
-        "origins": ["http://localhost:3000"],
+        "origins": ["*"],
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
         "expose_headers": ["Content-Type", "Authorization"],
@@ -408,7 +408,7 @@ def get_file_metadata(file_path):
 
 
 # 获取文件列表
-@app.route('/api/files', methods=['GET'])
+@app.route('/api/v1/files', methods=['GET'])
 def get_files():
     try:
         # 确保目录存在
@@ -426,7 +426,7 @@ def get_files():
 
 
 # 获取文件内容
-@app.route('/api/files/content', methods=['GET'])
+@app.route('/api/v1/files/content', methods=['GET'])
 def get_file_content():
     try:
         file_path = Path(request.args.get('path'))
@@ -468,7 +468,7 @@ def get_file_content():
 
 
 # 下载文件
-@app.route('/api/files/download', methods=['GET'])
+@app.route('/api/v1/files/download', methods=['GET'])
 def download_file():
     try:
         file_path = Path(request.args.get('path'))
@@ -494,7 +494,7 @@ from app.modules.reporting.pdf_generator import generate_report_pdf
 
 
 # 添加新的路由用于下载PDF格式的报告
-@app.route('/api/files/download-pdf', methods=['GET'])
+@app.route('/api/v1/files/download-pdf', methods=['GET'])
 def download_pdf():
     try:
         file_path = request.args.get('path')
@@ -540,7 +540,7 @@ def download_pdf():
 
 
 # 获取所有domains.json文件
-@app.route('/api/files/domains', methods=['GET'])
+@app.route('/api/v1/files/domains', methods=['GET'])
 def get_domain_files():
     try:
         dir_path = request.args.get('dirPath', OUTPUT_FOLDER)
@@ -560,7 +560,7 @@ def get_domain_files():
 
 
 # 上传文件
-@app.route('/api/files/upload', methods=['POST'])
+@app.route('/api/v1/files/upload', methods=['POST'])
 def upload_file():
     try:
         if 'file' not in request.files:
@@ -585,7 +585,7 @@ def upload_file():
 
 
 # 删除文件
-@app.route('/api/files', methods=['DELETE'])
+@app.route('/api/v1/files', methods=['DELETE'])
 def delete_file():
     try:
         file_path = request.args.get('path')
@@ -603,7 +603,7 @@ def delete_file():
 
 
 # 获取所有模型的领域评分数据
-@app.route('/api/models/domain-comparison', methods=['GET'])
+@app.route('/api/v1/models/domain-comparison', methods=['GET'])
 def get_domain_comparison():
     try:
         # 确保目录存在
@@ -1485,7 +1485,7 @@ def get_question_preview(filename):
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
-@app.route('/api/question_banks', methods=['GET'])
+@app.route('/api/question-banks', methods=['GET'])
 def get_question_banks():
     try:
         files = []
@@ -1501,7 +1501,7 @@ def get_question_banks():
         return jsonify({'status': 'error', 'message': '无法获取题库列表'}), 500
 
 
-@app.route('/api/question_banks/<path:filename>/details', methods=['GET'])
+@app.route('/api/question-banks/<path:filename>/details', methods=['GET'])
 def get_question_bank_details(filename):
     if '..' in filename or filename.startswith('/'):
         return jsonify({'status': 'error', 'message': '无效的文件名'}), 400
@@ -1601,3 +1601,4 @@ if __name__ == '__main__':
     os.makedirs(TRANSFORMED_DIR, exist_ok=True)
     os.makedirs(EVALUATE_DIR, exist_ok=True)
     app.run(host='0.0.0.0', port=5000, debug=True)
+    print(app.url_map)    

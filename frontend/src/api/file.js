@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // 更新API基础URL以连接到Flask后端
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = '';
 
 // 从文件名中提取时间
 const extractTimeFromPath = (path) => {

@@ -547,8 +547,8 @@ export default {
         
         const queryString = params.toString()
         const apiUrl = queryString 
-          ? `http://localhost:5000/api/tasks?${queryString}` 
-          : 'http://localhost:5000/api/tasks'
+          ? `/api/tasks?${queryString}` 
+          : '/api/tasks'
           
         const response = await fetch(apiUrl)
         const data = await response.json()
@@ -568,7 +568,7 @@ export default {
 
     const fetchQuestionFiles = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/question_banks')
+        const response = await fetch('/api/question-banks')
         const data = await response.json()
         if (data.status === 'success' && Array.isArray(data.files)) {
           questionFiles.value = data.files
@@ -596,7 +596,7 @@ export default {
 
       try {
         const encodedFilename = encodeURIComponent(filename)
-        const response = await fetch(`http://localhost:5000/api/question_banks/${encodedFilename}/details`)
+        const response = await fetch(`/api/question-banks/${encodedFilename}/details`)
         
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}))
@@ -660,7 +660,7 @@ export default {
 
       try {
         const encodedFilename = encodeURIComponent(taskForm.value.selectedFile)
-        const response = await fetch(`http://localhost:5000/api/questions/${encodedFilename}/preview`)
+        const response = await fetch(`/api/questions/${encodedFilename}/preview`)
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}))
@@ -699,7 +699,7 @@ export default {
       }
 
       try {
-        const response = await fetch('http://localhost:5000/api/tasks', {
+        const response = await fetch('/api/tasks', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -787,8 +787,8 @@ export default {
 
       try {
         const [transformResponse, evaluationResponse] = await Promise.all([
-          fetch(`http://localhost:5000/api/tasks/${task.id}/transformed`),
-          fetch(`http://localhost:5000/api/tasks/${task.id}/evaluation`)
+          fetch(`/api/tasks/${task.id}/transformed`),
+          fetch(`/api/tasks/${task.id}/evaluation`)
         ])
 
         if (!transformResponse.ok) {
@@ -873,7 +873,7 @@ export default {
         
         ElMessage.info(`正在删除任务: ${task.name}`)
         
-        const response = await fetch(`http://localhost:5000/api/tasks/${task.id}`, {
+        const response = await fetch(`/api/tasks/${task.id}`, {
           method: 'DELETE'
         })
 
@@ -903,7 +903,7 @@ export default {
       try {
         ElMessage.info(`正在重试任务: ${task.name}`)
         
-        const response = await fetch(`http://localhost:5000/api/tasks/${task.id}/retry`, {
+        const response = await fetch(`/api/tasks/${task.id}/retry`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -1027,7 +1027,7 @@ export default {
             type: 'warning'
           }
         ).then(async () => {
-          const response = await fetch('http://localhost:5000/api/logs/clear', {
+          const response = await fetch('/api/logs/clear', {
             method: 'POST'
           })
           const data = await response.json()
