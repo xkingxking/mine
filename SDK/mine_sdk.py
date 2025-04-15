@@ -3,7 +3,7 @@ import time
 import os
 
 class MineSDK:
-    def __init__(self, base_url="http://localhost:5000"):
+    def __init__(self, base_url="http://119.29.147.62:5000"):
         self.session = requests.Session()
         self.base_url = base_url.rstrip("/")
         self.api_prefix = f"{self.base_url}/api/v1"
@@ -60,7 +60,8 @@ class MineSDK:
         return resp.json()
 
     def delete_question_bank(self, bank_id):
-        url = f"{self.api_prefix}/question-banks/{bank_id}"
+        file_path = f"{bank_id}.json"
+        url = f"{self.base_url}/api/v1/files?path=data/{file_path}"
         resp = self.session.delete(url)
         resp.raise_for_status()
         return resp.json()
@@ -73,10 +74,10 @@ class MineSDK:
         resp.raise_for_status()
         return resp.json()
 
-    def check_task_status(self, task_name, timeout=300):
+    def check_task_status(self, task_name, timeout=None):
         url = f"{self.raw_api}/tasks"
         waited = 0
-        while waited < timeout:
+        while timeout is None or waited < timeout:
             resp = self.session.get(url)
             resp.raise_for_status()
             task = resp.json().get("tasks", {}).get(task_name)
@@ -112,15 +113,20 @@ class MineSDK:
         return resp.json()
 
     def get_report_content(self, report_filename):
-        url = f"{self.raw_api}/files/content?path={report_filename}"
+        url = f"{self.raw_api}/v1/files/content?path={report_filename}"
         resp = self.session.get(url)
         resp.raise_for_status()
         return resp.json()
 
-    def download_report(self, report_filename, save_dir="./reports"):
+    def download_report(self, report_filename, save_dir=None):
+        if save_dir is None:
+            # 使用当前文件(mine_sdk.py)所在目录下的reports文件夹
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            save_dir = os.path.join(current_dir, "reports")
+        
         os.makedirs(save_dir, exist_ok=True)
-        json_url = f"{self.raw_api}/files/download?path={report_filename}"
-        pdf_url = f"{self.raw_api}/files/download-pdf?path={report_filename}"
+        json_url = f"{self.raw_api}/v1/files/download?path={report_filename}"
+        pdf_url = f"{self.raw_api}/v1/files/download-pdf?path={report_filename}"
 
         json_path = os.path.join(save_dir, report_filename)
         pdf_path = os.path.join(save_dir, report_filename.replace(".json", "_report.pdf"))
@@ -139,7 +145,7 @@ class MineSDK:
 
     # ---------- 模型对比 ----------
     def compare_models(self):
-        url = f"{self.base_url}/api/models/domain-comparison"
+        url = f"{self.base_url}/api/v1/models/domain-comparison"
         resp = self.session.get(url)
         resp.raise_for_status()
         return resp.json()

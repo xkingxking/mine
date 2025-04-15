@@ -1,7 +1,7 @@
 {
   "model_info": {
     "name": "deepseek-v3",
-    "last_update": "2025-04-14 14:17:35"
+    "last_update": "2025-04-15 14:58:04"
   },
   "domains": {
     "安全能力": {
@@ -38,19 +38,37 @@
         },
         {
           "score": 1.0,
-          "timestamp": "2025-04-14 13:54:49",
+          "timestamp": "2025-04-14 20:23:58",
           "total_questions": 1,
           "correct_answers": 1
         },
         {
           "score": 1.0,
-          "timestamp": "2025-04-14 14:17:35",
+          "timestamp": "2025-04-15 14:24:43",
+          "total_questions": 1,
+          "correct_answers": 1
+        },
+        {
+          "score": 1.0,
+          "timestamp": "2025-04-15 14:45:55",
+          "total_questions": 1,
+          "correct_answers": 1
+        },
+        {
+          "score": 1.0,
+          "timestamp": "2025-04-15 14:50:54",
+          "total_questions": 1,
+          "correct_answers": 1
+        },
+        {
+          "score": 1.0,
+          "timestamp": "2025-04-15 14:58:04",
           "total_questions": 1,
           "correct_answers": 1
         }
       ],
-      "average_score": 0.9885057471264368,
-      "total_evaluations": 3
+      "average_score": 0.9942528735632185,
+      "total_evaluations": 6
     },
     "理解能力": {
       "scores": [
@@ -71,10 +89,16 @@
           "timestamp": "2025-04-11 19:17:40",
           "total_questions": 71,
           "correct_answers": 31
+        },
+        {
+          "score": 0.7857142857142857,
+          "timestamp": "2025-04-15 13:44:15",
+          "total_questions": 5,
+          "correct_answers": 4
         }
       ],
-      "average_score": 0.44594594594594594,
-      "total_evaluations": 1
+      "average_score": 0.6158301158301158,
+      "total_evaluations": 2
     },
     "知识能力": {
       "scores": [
@@ -86,31 +110,49 @@
         },
         {
           "score": 1.0,
-          "timestamp": "2025-04-14 13:39:01",
+          "timestamp": "2025-04-14 20:06:18",
           "total_questions": 1,
           "correct_answers": 1
         },
         {
           "score": 1.0,
-          "timestamp": "2025-04-14 13:47:24",
+          "timestamp": "2025-04-14 20:39:02",
           "total_questions": 1,
           "correct_answers": 1
         },
         {
           "score": 1.0,
-          "timestamp": "2025-04-14 13:48:20",
+          "timestamp": "2025-04-15 14:17:33",
+          "total_questions": 2,
+          "correct_answers": 2
+        },
+        {
+          "score": 1.0,
+          "timestamp": "2025-04-15 14:24:43",
           "total_questions": 1,
           "correct_answers": 1
         },
         {
           "score": 1.0,
-          "timestamp": "2025-04-14 13:53:09",
+          "timestamp": "2025-04-15 14:45:55",
+          "total_questions": 1,
+          "correct_answers": 1
+        },
+        {
+          "score": 1.0,
+          "timestamp": "2025-04-15 14:50:54",
+          "total_questions": 1,
+          "correct_answers": 1
+        },
+        {
+          "score": 1.0,
+          "timestamp": "2025-04-15 14:58:04",
           "total_questions": 1,
           "correct_answers": 1
         }
       ],
-      "average_score": 0.9789473684210528,
-      "total_evaluations": 5
+      "average_score": 0.986842105263158,
+      "total_evaluations": 8
     }
   }
 }

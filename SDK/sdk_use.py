@@ -1,6 +1,6 @@
 from mine_sdk import MineSDK
 
-sdk = MineSDK(base_url="http://localhost:5000")
+sdk = MineSDK(base_url="http://119.29.147.62:5000")
 
 # 1. 获取全部题库列表（包含元数据）
 print("=== 所有题库 ===")
@@ -32,7 +32,7 @@ result = sdk.create_question_bank(
     name="sdk_test",
     dimensions=["语言能力", "知识能力"],
     difficulties=["easy", "medium"],
-    count=1
+    count=2
 )
 print("\n=== 创建题库 ===")
 print("题库创建:", result)
@@ -87,17 +87,8 @@ for domain in compare["domains"]:
         s = compare["scores"].get(model, {}).get(domain, {})
         print(f"   模型 {model}: 平均分={s.get('average_score')}, 数量={s.get('total_evaluations')}")
 
-# 11. 删除题库
-try:
-    delete_bank_result = sdk.delete_question_bank(bank_id)
-    print("\n=== 删除题库 ===")
-    print("删除结果:", delete_bank_result)
-except Exception as e:
-    print("\n=== 删除题库失败 ===")
-    print(f"错误信息: {str(e)}")
-    print("提示: 题库可能已经被删除或不存在")
 
-# 12. 删除变形任务
+# 11. 删除变形任务
 try:
     delete_result = sdk.delete_transform_task("sdk_test_task")
     print("\n=== 删除任务 ===")
