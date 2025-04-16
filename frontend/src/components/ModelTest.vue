@@ -388,7 +388,7 @@ const loadModels = async () => {
         }
         
         // 建立新的 WebSocket 连接
-        socket.value = io('http://localhost:5000', {
+        socket.value = io('http://119.29.147.62:5000', {
           transports: ['websocket', 'polling'],
           reconnection: false
         })
