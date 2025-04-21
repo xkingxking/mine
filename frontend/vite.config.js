@@ -13,8 +13,14 @@ export default defineConfig({
   server: {
     port: 3000,
     fs: {
-      // Allow serving files from one level up to the project root
       allow: ['..']
+    },
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5000', // Flask 后端端口
+        changeOrigin: true,
+        rewrite: path => path.replace(/^\/api/, '/api') // 保留/api前缀
+      }
     }
   }
 })
